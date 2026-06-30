@@ -322,9 +322,12 @@ function rerenderActiveView(){
   if(cv.id==='view-dashboard') renderDashboard();
   else if(cv.id==='view-admin' && !adminState.locked) renderAdmin();
   else if(cv.id==='view-operator'){
-    // On ne touche pas si l'opérateur est en train de remplir un questionnaire
-    // (sinon ça lui efface sa saisie en cours), seulement s'il est encore au choix de machine.
-    if(!opState.machineId) renderOperator();
+    // On rafraîchit tant que l'opérateur n'a pas vraiment commencé à remplir
+    // (pas de nom choisi, pas de réponse donnée, pas encore validé).
+    // Ça permet au menu de se mettre à jour même si un ID de machine
+    // était déjà préchargé via le QR code avant que les données arrivent.
+    const noProgress = !opState.operatorName && Object.keys(opState.answers).length===0 && !opState.submitted;
+    if(noProgress) renderOperator();
   }
 }
 
