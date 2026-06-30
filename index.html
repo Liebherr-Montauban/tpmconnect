@@ -310,6 +310,11 @@ function rerenderActiveView(){
   if(!cv) return;
   if(cv.id==='view-dashboard') renderDashboard();
   else if(cv.id==='view-admin' && !adminState.locked) renderAdmin();
+  else if(cv.id==='view-operator'){
+    // On ne touche pas si l'opérateur est en train de remplir un questionnaire
+    // (sinon ça lui efface sa saisie en cours), seulement s'il est encore au choix de machine.
+    if(!opState.machineId) renderOperator();
+  }
 }
 
 setInterval(fetchFromSheet, POLL_INTERVAL);
