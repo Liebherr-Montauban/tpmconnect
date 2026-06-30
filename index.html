@@ -143,6 +143,7 @@ option{background:var(--bg3)}
 .spinner{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--yellow);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 </head>
 <body>
 
@@ -181,7 +182,10 @@ option{background:var(--bg3)}
     <div id="qr-modal-inner" style="background:#fff;padding:14px;border-radius:8px;display:inline-block;margin:8px auto"></div>
     <div id="qr-modal-url" style="font-size:10px;color:var(--gray2);word-break:break-all;margin:8px 0 12px"></div>
     <div style="font-size:11px;color:var(--gray);margin-bottom:12px">Plastifiez et collez sur le poste</div>
-    <button class="btn btn-secondary btn-sm" style="width:100%" onclick="closeQR()">Fermer</button>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="downloadQR()">⬇ Télécharger</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeQR()">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -671,8 +675,28 @@ function showQR(machineId){
   document.getElementById('qr-modal-sub').textContent=m.cat+' — '+machineId;
   document.getElementById('qr-modal-url').textContent=url;
   const inner=document.getElementById('qr-modal-inner');
-  inner.innerHTML='<div style="font-size:11px;color:#333;padding:18px;text-align:center;max-width:200px">🔗 Lien direct vers cette machine<br><br><span style="font-size:10px;color:#888;word-break:break-all">'+url+'</span></div>';
+  inner.innerHTML='';
+  try{
+    const qr=qrcode(0,'M');
+    qr.addData(url);
+    qr.make();
+    inner.innerHTML=qr.createImgTag(6,8);
+    const img=inner.querySelector('img');
+    if(img){img.style.display='block';window.__lastQRDataUrl=img.src;window.__lastQRName=m.name;}
+  }catch(e){
+    inner.innerHTML='<div style="font-size:11px;color:#c00;padding:18px;text-align:center;max-width:200px">Erreur génération QR<br>(vérifiez la connexion internet pour charger la librairie)</div>';
+    window.__lastQRDataUrl=null;
+  }
   document.getElementById('qr-modal').classList.add('open');
+}
+function downloadQR(){
+  if(!window.__lastQRDataUrl){alert('QR non disponible');return;}
+  const a=document.createElement('a');
+  a.href=window.__lastQRDataUrl;
+  a.download='QR-'+(window.__lastQRName||'machine')+'.gif';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 function closeQR(){document.getElementById('qr-modal').classList.remove('open');}
 document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)closeQR();});
