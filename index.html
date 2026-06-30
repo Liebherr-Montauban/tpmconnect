@@ -16,6 +16,7 @@
   --yellow-dim:#3d3000;
   --red:#E84040;
   --green:#22C55E;
+  --orange:#F59E0B;
   --gray:#888;
   --gray2:#555;
   --border:#2a2a2a;
@@ -89,6 +90,7 @@ option{background:var(--bg3)}
 .badge-green{background:rgba(34,197,94,.12);color:#22C55E}
 .badge-red{background:rgba(232,64,64,.12);color:var(--red)}
 .badge-yellow{background:var(--yellow-dim);color:var(--yellow)}
+.badge-orange{background:rgba(245,158,11,.12);color:var(--orange)}
 .badge-gray{background:var(--bg3);color:var(--gray);border:1px solid var(--border2)}
 
 .machine-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
@@ -96,6 +98,7 @@ option{background:var(--bg3)}
 .machine-tile:hover{border-color:var(--border2)}
 .machine-tile.done{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
 .machine-tile.issue{border-color:rgba(232,64,64,.4);background:rgba(232,64,64,.04);animation:pulse 1.5s infinite}
+.machine-tile.urgent{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.05)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 .tile-name{font-size:13px;font-weight:600;margin-bottom:3px;color:#fff}
 .tile-info{font-size:11px;color:var(--gray);display:flex;align-items:center;gap:3px}
@@ -103,6 +106,7 @@ option{background:var(--bg3)}
 .dot-green{background:var(--green)}
 .dot-red{background:var(--red)}
 .dot-gray{background:var(--gray2)}
+.dot-orange{background:var(--orange)}
 
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:13px;text-align:center}
@@ -112,7 +116,13 @@ option{background:var(--bg3)}
 .alert-banner{background:rgba(232,64,64,.08);border:1px solid rgba(232,64,64,.3);border-radius:10px;padding:11px 13px;margin-bottom:10px;font-size:12px;color:#f87171;display:flex;align-items:flex-start;gap:7px}
 .alert-banner svg{flex-shrink:0;margin-top:1px}
 
+.warn-banner{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:11px 13px;margin-bottom:10px;font-size:12px;color:var(--orange);display:flex;align-items:flex-start;gap:7px}
+.warn-banner svg{flex-shrink:0;margin-top:1px}
+
 .info-banner{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:10px 13px;font-size:12px;color:var(--yellow);margin-bottom:10px}
+
+.scan-banner{background:rgba(34,197,94,.06);border:1px dashed rgba(34,197,94,.35);border-radius:10px;padding:13px;margin-bottom:10px;font-size:12px;color:#4ade80;display:flex;align-items:center;gap:9px}
+.scan-banner svg{flex-shrink:0}
 
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
 .tbl th{text-align:left;padding:7px 9px;border-bottom:1px solid var(--border2);font-weight:600;color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
@@ -132,6 +142,7 @@ option{background:var(--bg3)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
 .modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:320px;text-align:center}
+.modal-box.wide{max-width:420px;text-align:left}
 
 .section-title{font-size:19px;font-weight:700;margin-bottom:2px;color:#fff}
 .section-sub{font-size:12px;color:var(--gray);margin-bottom:14px}
@@ -142,8 +153,10 @@ option{background:var(--bg3)}
 
 .spinner{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--yellow);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+.toggle-link{background:none;border:none;color:var(--yellow);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
 
@@ -175,28 +188,78 @@ option{background:var(--bg3)}
 <div class="view" id="view-dashboard"><div id="db-content"></div></div>
 <div class="view" id="view-admin"><div id="admin-content"></div></div>
 
-<div class="modal-overlay" id="qr-modal">
+<!-- Modal code-barres -->
+<div class="modal-overlay" id="bc-modal">
   <div class="modal-box">
-    <div id="qr-modal-title" style="font-size:16px;font-weight:700;margin-bottom:3px;color:#fff"></div>
-    <div id="qr-modal-sub" style="font-size:11px;color:var(--gray);margin-bottom:10px"></div>
-    <div id="qr-modal-inner" style="background:#fff;padding:14px;border-radius:8px;display:inline-block;margin:8px auto"></div>
-    <div id="qr-modal-url" style="font-size:10px;color:var(--gray2);word-break:break-all;margin:8px 0 12px"></div>
-    <div style="font-size:11px;color:var(--gray);margin-bottom:12px">Plastifiez et collez sur le poste</div>
+    <div id="bc-modal-title" style="font-size:16px;font-weight:700;margin-bottom:3px;color:#fff"></div>
+    <div id="bc-modal-sub" style="font-size:11px;color:var(--gray);margin-bottom:10px"></div>
+    <div id="bc-modal-inner" style="background:#fff;padding:14px;border-radius:8px;display:inline-block;margin:8px auto">
+      <canvas id="bc-canvas"></canvas>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin-bottom:12px">Plastifiez et collez sur le poste — scannable par douchette</div>
     <div style="display:flex;gap:7px">
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="downloadQR()">⬇ Télécharger</button>
-      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeQR()">Fermer</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="downloadBC()">⬇ Télécharger</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeBC()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pop-up rappel maintenance au démarrage -->
+<div class="modal-overlay" id="startup-modal">
+  <div class="modal-box wide">
+    <div class="lock-icon" style="margin:0 0 14px;background:var(--yellow-dim)">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="section-title">Maintenance premier niveau à faire</div>
+    <div class="section-sub">Cette semaine (<span id="su-weeklabel"></span>), certaines machines n'ont pas encore été contrôlées :</div>
+    <div id="su-list" style="max-height:200px;overflow:auto;margin-bottom:14px"></div>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="closeStartup(true)">Faire la TPM maintenant</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeStartup(false)">Plus tard</button>
     </div>
   </div>
 </div>
 
 <script>
 // ════════════════════════════════════════════
-// CONFIG — URL de ton Google Apps Script déployé
+// CONFIG — URL de ton Google Apps Script déployé (NE PAS CHANGER)
 // ════════════════════════════════════════════
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
 
+// ════════════════════════════════════════════
+// GESTION SEMAINE (réinitialisation dimanche soir / minuit -> lundi)
+// ════════════════════════════════════════════
+function mondayOf(d){
+  const x=new Date(d);
+  const day=x.getDay(); // 0=dim..6=sam
+  const diff=x.getDate()-day+(day===0?-6:1);
+  x.setDate(diff);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function currentWeekKey(){
+  const m=mondayOf(new Date());
+  return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-'+String(m.getDate()).padStart(2,'0');
+}
+function weekLabel(key){
+  const d=new Date(key+'T00:00:00');
+  const end=new Date(d); end.setDate(d.getDate()+6);
+  const fmt=x=>x.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+  return fmt(d)+' au '+fmt(end);
+}
+// Jour ISO : 1=lundi ... 7=dimanche
+function isoDay(){ const d=new Date().getDay(); return d===0?7:d; }
+// Rappel "dépêchez-vous" actif dès jeudi (jour 4) jusqu'à dimanche (jour 7)
+function isUrgentPeriod(){ return isoDay()>=4; }
+
 function today(){ return new Date().toLocaleDateString('fr-FR'); }
+function nowTime(){ return new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDuration(sec){
+  if(sec==null) return '—';
+  const m=Math.floor(sec/60), s=sec%60;
+  return m>0 ? `${m} min ${String(s).padStart(2,'0')} s` : `${s} s`;
+}
 
 function defaultData(){
   return {
@@ -222,9 +285,9 @@ function defaultData(){
       'Tournage':["État de la pointe de centrage","Niveau de liquide de coupe","Mandrin : usure des mâchoires"],
       'Ligne':["Capteurs de présence opérationnels","Convoyeur : tension de courroie","Arrêts d'urgence testés","Vérification des préhenseurs"],
     },
-    history:[],
-    todayDate: today(),
-    todayRecords:{}
+    history:[],       // archive complète, jamais supprimée
+    weekKey: currentWeekKey(),
+    weekRecords:{}     // { machineId: record } pour la semaine en cours
   };
 }
 
@@ -233,6 +296,15 @@ let lastKnownJSON = '';
 let isOnline = false;
 let initialSyncDone = false;
 let initialSyncError = false;
+let startupModalShown = false;
+
+function rolloverWeekIfNeeded(){
+  const wk=currentWeekKey();
+  if(APP.weekKey!==wk){
+    APP.weekKey=wk;
+    APP.weekRecords={};
+  }
+}
 
 // ════════════════════════════════════════════
 // SYNC ENGINE — Google Sheets via Apps Script
@@ -259,14 +331,18 @@ async function fetchFromSheet(){
       if(newJSON !== lastKnownJSON){
         const changed = lastKnownJSON !== '';
         APP = data;
-        if(APP.todayDate !== today()){ APP.todayDate = today(); APP.todayRecords = {}; }
+        if(!APP.weekKey) APP.weekKey = currentWeekKey();
+        if(!APP.weekRecords) APP.weekRecords = {};
+        rolloverWeekIfNeeded();
         lastKnownJSON = newJSON;
         initialSyncDone = true;
         rerenderActiveView();
         if(changed) showSyncFlash();
+        maybeShowStartupModal();
       } else if(firstLoad){
         initialSyncDone = true;
         rerenderActiveView();
+        maybeShowStartupModal();
       }
       setSyncState('live');
       return true;
@@ -277,6 +353,7 @@ async function fetchFromSheet(){
       await pushToSheet();
       rerenderActiveView();
       setSyncState('live');
+      maybeShowStartupModal();
       return true;
     }
   }catch(err){
@@ -311,6 +388,7 @@ function saveData(){
 async function syncedWrite(mutator){
   setSyncState('syncing');
   await fetchFromSheet();
+  rolloverWeekIfNeeded();
   mutator();
   await pushToSheet();
   rerenderActiveView();
@@ -333,15 +411,70 @@ function rerenderActiveView(){
   else if(cv.id==='view-admin' && !adminState.locked) renderAdmin();
   else if(cv.id==='view-operator'){
     // On rafraîchit tant que l'opérateur n'a pas vraiment commencé à remplir
-    // (pas de nom choisi, pas de réponse donnée, pas encore validé).
-    // Ça permet au menu de se mettre à jour même si un ID de machine
-    // était déjà préchargé via le QR code avant que les données arrivent.
     const noProgress = !opState.operatorName && Object.keys(opState.answers).length===0 && !opState.submitted;
     if(noProgress) renderOperator();
   }
 }
 
-setInterval(fetchFromSheet, POLL_INTERVAL);
+setInterval(()=>{ rolloverWeekIfNeeded(); fetchFromSheet(); }, POLL_INTERVAL);
+
+// ════════════════════════════════════════════
+// POP-UP DE DÉMARRAGE — maintenance premier niveau
+// ════════════════════════════════════════════
+function pendingMachinesThisWeek(){
+  return APP.machines.filter(m=>!APP.weekRecords[m.id]);
+}
+function maybeShowStartupModal(){
+  if(startupModalShown) return;
+  const pending=pendingMachinesThisWeek();
+  if(pending.length===0) return;
+  startupModalShown=true;
+  document.getElementById('su-weeklabel').textContent=weekLabel(APP.weekKey);
+  document.getElementById('su-list').innerHTML = pending.map(m=>
+    `<div style="display:flex;align-items:center;justify-content:between;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${m.name}</span><span class="badge ${isUrgentPeriod()?'badge-orange':'badge-gray'}">${m.cat}</span>
+    </div>`).join('');
+  document.getElementById('startup-modal').classList.add('open');
+}
+function closeStartup(goToOperator){
+  document.getElementById('startup-modal').classList.remove('open');
+  if(goToOperator) nav('operator');
+}
+
+// ════════════════════════════════════════════
+// SCAN DOUCHETTE — capture clavier globale (code-barres = ID machine)
+// ════════════════════════════════════════════
+let scanBuffer='';
+let scanTimer=null;
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter'){
+    const code=scanBuffer.trim();
+    scanBuffer='';
+    if(code.length>=2) handleScan(code);
+    return;
+  }
+  if(e.key.length===1){ scanBuffer+=e.key; }
+  clearTimeout(scanTimer);
+  scanTimer=setTimeout(()=>{ scanBuffer=''; },350);
+});
+function handleScan(code){
+  const m=APP.machines.find(x=>x.id.toLowerCase()===code.toLowerCase());
+  if(!m){
+    flashScanResult(false, code);
+    return;
+  }
+  flashScanResult(true, m.name);
+  nav('operator');
+  selectMachine(m.id, true);
+}
+function flashScanResult(ok, label){
+  const lbl=document.getElementById('sync-label');
+  if(!lbl) return;
+  const prevColor=lbl.style.color, prevText=lbl.textContent;
+  lbl.textContent = ok ? '✓ Scan : '+label : '✗ Code inconnu';
+  lbl.style.color = ok ? 'var(--green)' : 'var(--red)';
+  setTimeout(()=>{ lbl.textContent=prevText; lbl.style.color=prevColor; },1600);
+}
 
 // ════════════════════════════════════════════
 // NAVIGATION
@@ -365,12 +498,14 @@ let opState = {
   machineId: getParam('machine') || '',
   operatorName: '',
   answers: {},
-  submitted: false
+  submitted: false,
+  startTime: null,
+  lastDuration: null
 };
 
 function getCat(id){ const m=APP.machines.find(x=>x.id===id); return m?m.cat:null; }
 function getMachineName(id){ const m=APP.machines.find(x=>x.id===id); return m?m.name:id; }
-function getRecord(id){ return APP.todayRecords[id]||null; }
+function getRecord(id){ return APP.weekRecords[id]||null; }
 
 function renderOperator(){
   const c = document.getElementById('op-content');
@@ -406,7 +541,7 @@ function renderOperator(){
     <div class="success-screen">
       <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
       <div class="section-title">TPM validée</div>
-      <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">${getMachineName(opState.machineId)} — ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+      <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">${getMachineName(opState.machineId)} — ${nowTime()}</div>
       ${hasIssue?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><strong>Anomalie signalée</strong> — alerte envoyée à la maintenance</span></div>`:''}
       <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:13px;font-size:12px;color:#4ade80;margin-bottom:18px">
         ✓ Fiche enregistrée sur Google Sheets — visible partout
@@ -422,18 +557,30 @@ function renderOperator(){
   const answered = Object.keys(opState.answers).length;
   const allDone = opState.machineId && opState.operatorName && answered===questions.length && questions.length>0;
   const existing = opState.machineId ? getRecord(opState.machineId) : null;
+  const urgent = isUrgentPeriod();
+  const pendingCount = pendingMachinesThisWeek().length;
 
   let html = `
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
     <div class="section-title">Contrôle TPM</div>
-    <span class="badge badge-gray">${new Date().toLocaleDateString('fr-FR')}</span>
+    <span class="badge badge-gray">Semaine du ${weekLabel(APP.weekKey)}</span>
   </div>
-  <div class="section-sub">Sélectionnez votre machine et votre nom</div>
+  <div class="section-sub">Scannez le code-barres du poste ou sélectionnez la machine</div>
+
+  <div class="scan-banner">
+    <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><line x1="6" y1="6" x2="6" y2="18"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="13" y1="6" x2="13" y2="18"/><line x1="16" y1="6" x2="16" y2="18"/><line x1="19" y1="6" x2="19" y2="18"/></svg>
+    <span>Prêt à scanner — la machine se sélectionne automatiquement</span>
+  </div>
+
+  ${urgent && pendingCount>0 ? `<div class="warn-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span><strong>Dépêchez-vous !</strong> ${pendingCount} machine${pendingCount>1?'s':''} restent à contrôler avant la fin de la semaine (reset dimanche soir).</span>
+  </div>`:''}
 
   ${!isOnline?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Connexion à Google Sheets indisponible — vérifie ta connexion</span></div>`:''}
 
   ${existing?`<div class="info-banner">
-    ✓ TPM déjà faite ce matin par <strong>${existing.operator}</strong> à ${existing.time}
+    ✓ TPM déjà faite cette semaine par <strong>${existing.operator}</strong> le ${existing.date} à ${existing.time}
   </div>`:''}
 
   <div class="card">
@@ -475,7 +622,7 @@ function renderOperator(){
       </div>
     </div>
     <button class="btn btn-primary" onclick="submitTPM()" ${allDone?'':'disabled'}>
-      Valider la TPM du matin
+      Valider la TPM
     </button>
     ${!allDone?`<div style="text-align:center;font-size:11px;color:var(--gray);margin-top:7px">Répondez à tous les points pour valider</div>`:''}`;
   }
@@ -483,8 +630,9 @@ function renderOperator(){
   c.innerHTML = html;
 }
 
-function selectMachine(id){
+function selectMachine(id, fromScan){
   opState.machineId=id; opState.operatorName=''; opState.answers={};
+  opState.startTime = id ? Date.now() : null; // démarrage du chronomètre (mesuré, non affiché)
   if(id) history.replaceState(null,'','?machine='+id);
   renderOperator();
 }
@@ -515,24 +663,26 @@ function submitTPM(){
   if(Object.keys(opState.answers).length!==questions.length) return;
   const hasIssue=Object.values(opState.answers).some(a=>a==='ko');
   const machineId=opState.machineId, operatorName=opState.operatorName, answers={...opState.answers};
+  const durationSec = opState.startTime ? Math.max(1,Math.round((Date.now()-opState.startTime)/1000)) : null;
   syncedWrite(()=>{
     const record={
       machineId, machineName:getMachineName(machineId),
       operator:operatorName, cat, questions:[...questions],
-      time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
-      date:today(), answers, anomaly:hasIssue
+      time:nowTime(),
+      date:today(), weekKey:APP.weekKey,
+      answers, anomaly:hasIssue,
+      durationSec
     };
-    if(APP.todayDate!==today()){APP.todayDate=today();APP.todayRecords={};}
-    APP.todayRecords[machineId]=record;
-    APP.history.unshift(record);
-    if(APP.history.length>200) APP.history=APP.history.slice(0,200);
+    APP.weekRecords[machineId]=record;
+    APP.history.unshift(record); // archive, jamais supprimée
   });
   opState.submitted=true;
+  opState.lastDuration=durationSec;
   renderOperator();
 }
 
 function resetOp(){
-  opState={machineId:getParam('machine')||'',operatorName:'',answers:{},submitted:false};
+  opState={machineId:getParam('machine')||'',operatorName:'',answers:{},submitted:false,startTime:null,lastDuration:null};
   renderOperator();
 }
 
@@ -541,11 +691,13 @@ function resetOp(){
 // ════════════════════════════════════════════
 function renderDashboard(){
   const c=document.getElementById('db-content');
-  const machines=APP.machines, records=APP.todayRecords;
+  const machines=APP.machines, records=APP.weekRecords;
   const done=machines.filter(m=>records[m.id]).length;
   const issues=machines.filter(m=>records[m.id]&&records[m.id].anomaly).length;
   const pct=machines.length?Math.round(done/machines.length*100):0;
-  const now=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const now=nowTime();
+  const urgent=isUrgentPeriod();
+  const pending=machines.filter(m=>!records[m.id]);
 
   let html=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
@@ -555,7 +707,12 @@ function renderDashboard(){
       <span style="font-size:11px;color:var(--gray)">Màj ${now}</span>
     </div>
   </div>
-  <div class="section-sub">État TPM du matin — ${today()}</div>
+  <div class="section-sub">État TPM — semaine du ${weekLabel(APP.weekKey)}</div>
+
+  ${urgent && pending.length>0 ? `<div class="warn-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span><strong>Dépêchez-vous !</strong> ${pending.length} machine${pending.length>1?'s':''} encore non contrôlée${pending.length>1?'s':''} avant le reset de dimanche soir : ${pending.map(m=>m.name).join(' · ')}</span>
+  </div>`:''}
 
   ${issues>0?`<div class="alert-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -576,31 +733,34 @@ function renderDashboard(){
   <div class="machine-grid">
     ${machines.map(m=>{
       const r=records[m.id];
-      return `<div class="machine-tile ${r?(r.anomaly?'issue':'done'):''}">
+      const cls = r?(r.anomaly?'issue':'done') : (urgent?'urgent':'');
+      return `<div class="machine-tile ${cls}">
         <div class="tile-name">${m.name}</div>
         <div style="margin-bottom:5px"><span class="badge badge-gray">${m.cat}</span></div>
         ${r?`<div class="tile-info"><span class="dot ${r.anomaly?'dot-red':'dot-green'}"></span> ${r.anomaly?'Anomalie':'Validé'}</div>
         <div class="tile-info" style="margin-top:2px">${r.operator} · ${r.time}</div>`
-        :`<div class="tile-info"><span class="dot dot-gray"></span> En attente</div>`}
+        :`<div class="tile-info"><span class="dot ${urgent?'dot-orange':'dot-gray'}"></span> En attente</div>`}
       </div>`;
     }).join('')}
   </div>
 
   ${done>0?`<div class="card">
-    <div class="card-title">Récapitulatif du jour</div>
+    <div class="card-title">Récapitulatif de la semaine</div>
     <table class="tbl">
-      <thead><tr><th>Machine</th><th>Opérateur</th><th>Heure</th><th>Statut</th></tr></thead>
+      <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th></tr></thead>
       <tbody>
         ${machines.filter(m=>records[m.id]).map(m=>{
           const r=records[m.id];
           return `<tr><td style="font-weight:600">${m.name}</td><td>${r.operator}</td>
+          <td style="color:var(--gray)">${r.date}</td>
           <td style="font-variant-numeric:tabular-nums;color:var(--gray)">${r.time}</td>
+          <td style="font-variant-numeric:tabular-nums;color:var(--gray)">${fmtDuration(r.durationSec)}</td>
           <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td></tr>`;
         }).join('')}
       </tbody>
     </table>
   </div>`:`<div style="text-align:center;padding:28px 20px;color:var(--gray);font-size:13px">
-    Aucune TPM validée pour l'instant.
+    Aucune TPM validée pour l'instant cette semaine.
   </div>`}`;
 
   c.innerHTML=html;
@@ -609,7 +769,7 @@ function renderDashboard(){
 // ════════════════════════════════════════════
 // VUE ADMIN
 // ════════════════════════════════════════════
-let adminState={locked:true,pass:'',addingMachine:false,newName:'',newCat:'Presse'};
+let adminState={locked:true,pass:'',addingMachine:false,newName:'',newCat:'Presse',showArchive:false};
 const ADMIN_CODE='1234';
 
 function renderAdmin(){
@@ -630,12 +790,41 @@ function renderAdmin(){
     return;
   }
   const cats=Object.keys(APP.questions);
+  const urgent=isUrgentPeriod();
+  const pending=APP.machines.filter(m=>!APP.weekRecords[m.id]);
+
   c.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
     <div class="section-title">Administration</div>
     <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
   </div>
-  <div class="section-sub">Gestion des machines et des contrôles</div>
+  <div class="section-sub">Gestion des machines, codes-barres et suivi hebdomadaire — semaine du ${weekLabel(APP.weekKey)}</div>
+
+  ${pending.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
+    ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
+  </div>`:`<div class="info-banner">✓ Toutes les machines ont été contrôlées cette semaine</div>`}
+
+  <div class="card">
+    <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait</div>
+    <table class="tbl">
+      <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut</th><th>Opérateur</th><th>Durée</th></tr></thead>
+      <tbody>
+        ${APP.machines.map(m=>{
+          const r=APP.weekRecords[m.id];
+          let statusCell;
+          if(r) statusCell = r.anomaly?`<span class="badge badge-red">⚠ Anomalie</span>`:`<span class="badge badge-green">✓ Fait</span>`;
+          else statusCell = urgent?`<span class="badge badge-orange">⏰ En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
+          return `<tr>
+            <td style="font-weight:600">${m.name}</td>
+            <td><span class="badge badge-yellow">${m.cat}</span></td>
+            <td>${statusCell}</td>
+            <td>${r?r.operator:'—'}</td>
+            <td style="font-variant-numeric:tabular-nums">${r?fmtDuration(r.durationSec):'—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>
 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -650,18 +839,17 @@ function renderAdmin(){
         <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Catégorie</label>
         <select id="new-mcat" onchange="adminState.newCat=this.value">${cats.map(c2=>`<option ${adminState.newCat===c2?'selected':''}>${c2}</option>`).join('')}</select></div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + QR Code</button>
+      <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + Code-barres</button>
     </div>`:''}
     <table class="tbl">
-      <thead><tr><th>Machine</th><th>Catégorie</th><th>Aujourd'hui</th><th>QR</th></tr></thead>
+      <thead><tr><th>Machine</th><th>ID / Code</th><th>Catégorie</th><th>Code-barres</th></tr></thead>
       <tbody>
         ${APP.machines.map(m=>{
-          const r=APP.todayRecords[m.id];
           return `<tr>
             <td style="font-weight:600">${m.name}</td>
+            <td style="font-variant-numeric:tabular-nums;color:var(--gray)">${m.id}</td>
             <td><span class="badge badge-yellow">${m.cat}</span></td>
-            <td>${r?(r.anomaly?`<span class="badge badge-red">⚠</span>`:`<span class="badge badge-green">✓</span>`):`<span class="badge badge-gray">—</span>`}</td>
-            <td><button class="btn btn-secondary btn-sm" onclick="showQR('${m.id}')">QR</button></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Voir / Imprimer</button></td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -702,9 +890,27 @@ function renderAdmin(){
   </div>
 
   <div class="card">
-    <div class="card-title">Données du jour</div>
-    <p style="font-size:13px;color:var(--gray);margin-bottom:10px">${Object.keys(APP.todayRecords).length} TPM validée(s) aujourd'hui — stockées sur Google Sheets.</p>
-    <button class="btn btn-danger btn-sm" onclick="resetDay()">Remettre à zéro (démo)</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:adminState.showArchive?10:0">
+      <div class="card-title" style="margin-bottom:0">Archives — historique complet (rien n'est supprimé)</div>
+      <button class="toggle-link" onclick="toggleArchive()">${adminState.showArchive?'Masquer':'Afficher'} (${APP.history.length})</button>
+    </div>
+    ${adminState.showArchive?`
+    <div style="max-height:320px;overflow:auto;margin-top:10px">
+    <table class="tbl">
+      <thead><tr><th>Semaine</th><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th></tr></thead>
+      <tbody>
+        ${APP.history.slice(0,300).map(r=>`<tr>
+          <td style="color:var(--gray)">${weekLabel(r.weekKey||currentWeekKey())}</td>
+          <td style="font-weight:600">${r.machineName||r.machineId}</td>
+          <td>${r.operator}</td>
+          <td style="color:var(--gray)">${r.date}</td>
+          <td style="color:var(--gray)">${r.time}</td>
+          <td style="font-variant-numeric:tabular-nums">${fmtDuration(r.durationSec)}</td>
+          <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>`:`<p style="font-size:12px;color:var(--gray)">${APP.history.length} fiche(s) archivée(s) depuis le début. Cliquez sur "Afficher" pour consulter l'historique complet — aucune donnée n'est jamais effacée.</p>`}
   </div>`;
 }
 
@@ -716,6 +922,7 @@ function tryAdmin(){
 }
 function lockAdmin(){adminState.locked=true;renderAdmin();}
 function toggleAddMachine(){adminState.addingMachine=!adminState.addingMachine;renderAdmin();}
+function toggleArchive(){adminState.showArchive=!adminState.showArchive;renderAdmin();}
 function addMachine(){
   const name=document.getElementById('new-mname')?.value||adminState.newName;
   if(!name.trim()){alert('Entrez un nom');return;}
@@ -730,7 +937,7 @@ function addMachine(){
     APP.machines.push({id,name:name.trim(),cat});
   }).then(()=>{
     renderAdmin();
-    showQR(id);
+    showBC(id);
   });
 }
 function addQuestion(cat){
@@ -755,52 +962,50 @@ function removeOperator(cat,i){
     syncedWrite(()=>{ APP.operators[cat].splice(i,1); }).then(renderAdmin);
   }
 }
-function resetDay(){
-  if(confirm('Remettre à zéro toutes les TPM ?')){
-    syncedWrite(()=>{ APP.todayRecords={}; }).then(renderAdmin);
-  }
-}
 
 // ════════════════════════════════════════════
-// QR CODE — texte simple, pas de dépendance externe
+// CODE-BARRES — généré automatiquement (JsBarcode, format CODE128)
 // ════════════════════════════════════════════
-function showQR(machineId){
+function showBC(machineId){
   const m=APP.machines.find(x=>x.id===machineId);
   if(!m) return;
-  const url=window.location.origin+window.location.pathname+'?machine='+machineId;
-  document.getElementById('qr-modal-title').textContent=m.name;
-  document.getElementById('qr-modal-sub').textContent=m.cat+' — '+machineId;
-  document.getElementById('qr-modal-url').textContent=url;
-  const inner=document.getElementById('qr-modal-inner');
-  inner.innerHTML='';
+  document.getElementById('bc-modal-title').textContent=m.name;
+  document.getElementById('bc-modal-sub').textContent=m.cat+' — '+m.id;
+  const canvas=document.getElementById('bc-canvas');
   try{
-    const qr=qrcode(0,'M');
-    qr.addData(url);
-    qr.make();
-    inner.innerHTML=qr.createImgTag(6,8);
-    const img=inner.querySelector('img');
-    if(img){img.style.display='block';window.__lastQRDataUrl=img.src;window.__lastQRName=m.name;}
+    JsBarcode(canvas, m.id, {
+      format:"CODE128",
+      lineColor:"#000",
+      width:2.4,
+      height:70,
+      displayValue:true,
+      fontSize:16,
+      margin:10
+    });
+    window.__lastBCDataUrl = canvas.toDataURL('image/png');
+    window.__lastBCName = m.name;
   }catch(e){
-    inner.innerHTML='<div style="font-size:11px;color:#c00;padding:18px;text-align:center;max-width:200px">Erreur génération QR<br>(vérifiez la connexion internet pour charger la librairie)</div>';
-    window.__lastQRDataUrl=null;
+    window.__lastBCDataUrl=null;
   }
-  document.getElementById('qr-modal').classList.add('open');
+  document.getElementById('bc-modal').classList.add('open');
 }
-function downloadQR(){
-  if(!window.__lastQRDataUrl){alert('QR non disponible');return;}
+function downloadBC(){
+  if(!window.__lastBCDataUrl){alert('Code-barres non disponible');return;}
   const a=document.createElement('a');
-  a.href=window.__lastQRDataUrl;
-  a.download='QR-'+(window.__lastQRName||'machine')+'.gif';
+  a.href=window.__lastBCDataUrl;
+  a.download='CODE-'+(window.__lastBCName||'machine')+'.png';
   document.body.appendChild(a);
   a.click();
   a.remove();
 }
-function closeQR(){document.getElementById('qr-modal').classList.remove('open');}
-document.getElementById('qr-modal').addEventListener('click',function(e){if(e.target===this)closeQR();});
+function closeBC(){document.getElementById('bc-modal').classList.remove('open');}
+document.getElementById('bc-modal').addEventListener('click',function(e){if(e.target===this)closeBC();});
+document.getElementById('startup-modal').addEventListener('click',function(e){if(e.target===this)closeStartup(false);});
 
 // ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
+rolloverWeekIfNeeded();
 renderOperator();
 fetchFromSheet();
 if(getParam('machine')){
