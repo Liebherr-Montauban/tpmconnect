@@ -685,6 +685,23 @@ function renderAdmin(){
   </div>
 
   <div class="card">
+    <div class="card-title">Opérateurs (prénoms)</div>
+    ${cats.map(cat=>`
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <span class="badge badge-yellow">${cat}</span>
+        <button class="btn btn-secondary btn-sm" onclick="addOperator('${cat}')">+ Ajouter</button>
+      </div>
+      ${(APP.operators[cat]||[]).map((o,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
+        <span style="flex:1;padding-right:7px">${o}</span>
+        <button onclick="removeOperator('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
+      </div>`).join('')}
+      ${(APP.operators[cat]||[]).length===0?`<div style="font-size:12px;color:var(--gray2);padding:7px 0">Aucun opérateur pour cette catégorie</div>`:''}
+    </div>`).join('')}
+  </div>
+
+  <div class="card">
     <div class="card-title">Données du jour</div>
     <p style="font-size:13px;color:var(--gray);margin-bottom:10px">${Object.keys(APP.todayRecords).length} TPM validée(s) aujourd'hui — stockées sur Google Sheets.</p>
     <button class="btn btn-danger btn-sm" onclick="resetDay()">Remettre à zéro (démo)</button>
@@ -725,6 +742,17 @@ function addQuestion(cat){
 function removeQ(cat,i){
   if(confirm('Supprimer ce point de contrôle ?')){
     syncedWrite(()=>{ APP.questions[cat].splice(i,1); }).then(renderAdmin);
+  }
+}
+function addOperator(cat){
+  const name=prompt(`Prénom du nouvel opérateur pour "${cat}" :`);
+  if(name&&name.trim()){
+    syncedWrite(()=>{ if(!APP.operators[cat]) APP.operators[cat]=[]; APP.operators[cat].push(name.trim()); }).then(renderAdmin);
+  }
+}
+function removeOperator(cat,i){
+  if(confirm('Supprimer cet opérateur ?')){
+    syncedWrite(()=>{ APP.operators[cat].splice(i,1); }).then(renderAdmin);
   }
 }
 function resetDay(){
