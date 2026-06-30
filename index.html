@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TPMConnect — Contrôle TPM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --dark:#0F1117;
+    --dark2:#1E2332;
+    --teal:#00C49A;
+    --red:#E84040;
+    --orange:#F59E0B;
+    --green:#10B981;
+    --bg:#F4F5F7;
+    --white:#FFFFFF;
+    --gray:#6B7280;
+    --gray2:#9CA3AF;
+    --border:#E5E7EB;
+    --text:#111827;
+  }
+  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:16px}
+
+  /* ── TOP BAR ── */
+  .topbar{background:var(--dark);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{color:#fff;font-size:17px;font-weight:700;letter-spacing:-0.3px}
+  .logo span{color:var(--teal)}
+  .topbar-tabs{display:flex;gap:2px}
+  .topbar-tab{background:transparent;border:none;color:#9CA3AF;font-size:12px;padding:6px 10px;border-radius:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s}
+  .topbar-tab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .topbar-tab.active{color:var(--teal);background:rgba(0,196,154,.12)}
+
+  /* ── VIEWS ── */
+  .view{display:none;padding:16px;max-width:640px;margin:0 auto;padding-bottom:40px}
+  .view.active{display:block}
+
+  /* ── CARDS ── */
+  .card{background:var(--white);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+  .card-title{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+
+  /* ── FORM ELEMENTS ── */
+  label.lbl{display:block;font-size:13px;font-weight:500;color:var(--gray);margin-bottom:5px;margin-top:12px}
+  label.lbl:first-child{margin-top:0}
+  select,input[type=text],input[type=password]{
+    width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;
+    background:var(--white);color:var(--text);font-size:15px;appearance:none;
+    transition:border-color .15s
+  }
+  select:focus,input:focus{outline:none;border-color:var(--teal)}
+  select:disabled{background:#F9FAFB;color:var(--gray2)}
+
+  /* ── BUTTONS ── */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .15s;width:100%}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-primary:hover{background:#00b389}
+  .btn-primary:disabled{background:#9CA3AF;cursor:not-allowed}
+  .btn-secondary{background:var(--white);color:var(--text);border:1.5px solid var(--border)}
+  .btn-danger{background:#FEF2F2;color:var(--red);border:1.5px solid #FECACA}
+  .btn-sm{padding:7px 14px;font-size:13px;width:auto;border-radius:8px}
+
+  /* ── MACHINE HEADER (opérateur) ── */
+  .machine-header{background:var(--dark);border-radius:14px;padding:16px;margin-bottom:12px;color:#fff}
+  .machine-header .cat-tag{display:inline-block;background:rgba(0,196,154,.2);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+  .machine-header h2{font-size:22px;font-weight:700;margin-bottom:2px}
+  .machine-header p{color:#9CA3AF;font-size:13px}
+
+  /* ── CHECK ROWS ── */
+  .check-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+  .check-row:last-child{border-bottom:none}
+  .check-q{font-size:14px;flex:1;padding-right:10px;line-height:1.4}
+  .radio-pair{display:flex;gap:6px;flex-shrink:0}
+  .radio-btn{padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;font-weight:600;cursor:pointer;background:var(--white);color:var(--gray);transition:all .15s}
+  .radio-btn.ok-active{background:#ECFDF5;border-color:var(--green);color:var(--green)}
+  .radio-btn.ko-active{background:#FEF2F2;border-color:var(--red);color:var(--red)}
+
+  /* ── PROGRESS ── */
+  .progress-wrap{margin-top:14px}
+  .progress-bar{height:5px;background:#E5E7EB;border-radius:3px;overflow:hidden;margin-bottom:5px}
+  .progress-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .3s}
+  .progress-label{font-size:12px;color:var(--gray2)}
+
+  /* ── BADGES ── */
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge-green{background:#ECFDF5;color:#065F46}
+  .badge-red{background:#FEF2F2;color:#991B1B}
+  .badge-orange{background:#FFFBEB;color:#92400E}
+  .badge-gray{background:#F3F4F6;color:#4B5563}
+  .badge-teal{background:rgba(0,196,154,.12);color:#065F46}
+
+  /* ── DASHBOARD GRID ── */
+  .machine-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .machine-tile{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:13px;cursor:pointer;transition:all .2s}
+  .machine-tile.done{border-color:#6EE7B7;background:#F0FDF4}
+  .machine-tile.issue{border-color:#FCA5A5;background:#FEF2F2;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+  .tile-name{font-size:14px;font-weight:600;margin-bottom:4px}
+  .tile-info{font-size:12px;color:var(--gray2);display:flex;align-items:center;gap:4px}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .dot-green{background:var(--green)}
+  .dot-red{background:var(--red)}
+  .dot-gray{background:#D1D5DB}
+
+  /* ── STATS ── */
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+  .stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .stat-num{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat-lbl{font-size:11px;color:var(--gray2);margin-top:2px}
+
+  /* ── ALERT BANNER ── */
+  .alert-banner{background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#991B1B;display:flex;align-items:flex-start;gap:8px}
+  .alert-banner svg{flex-shrink:0;margin-top:1px}
+
+  /* ── TABLE ── */
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th{text-align:left;padding:8px 10px;border-bottom:1.5px solid var(--border);font-weight:600;color:var(--gray);font-size:12px}
+  .tbl td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .tbl tr:last-child td{border-bottom:none}
+
+  /* ── SUCCESS SCREEN ── */
+  .success-screen{text-align:center;padding:40px 20px}
+  .success-icon{width:72px;height:72px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .success-icon svg{width:36px;height:36px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ── ADMIN ── */
+  .lock-screen{display:flex;align-items:center;justify-content:center;min-height:60vh}
+  .lock-box{width:100%;max-width:320px;text-align:center}
+  .lock-icon{width:60px;height:60px;background:var(--dark);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .lock-icon svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ── QR MODAL ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:var(--white);border-radius:20px;padding:24px;width:100%;max-width:340px;text-align:center}
+  .modal-box canvas{border:6px solid var(--white);outline:1px solid var(--border);border-radius:4px;margin:12px auto;display:block}
+
+  /* ── MISC ── */
+  .section-title{font-size:20px;font-weight:700;margin-bottom:2px}
+  .section-sub{font-size:13px;color:var(--gray2);margin-bottom:16px}
+  .hint{font-size:12px;color:var(--gray2);margin-top:6px;padding:8px 12px;background:#F9FAFB;border-radius:8px}
+  .qr-demo-note{background:rgba(0,196,154,.08);border:1px solid rgba(0,196,154,.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#065F46;margin-bottom:14px}
+  input[type=text].add-field{margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">TPM<span>Connect</span></div>
+  <div class="topbar-tabs">
+    <button class="topbar-tab active" onclick="nav('operator')" id="tab-operator">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7M14 17h7M14 20h7"/></svg>
+      Opérateur
+    </button>
+    <button class="topbar-tab" onclick="nav('dashboard')" id="tab-dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      Tableau
+    </button>
+    <button class="topbar-tab" onclick="nav('admin')" id="tab-admin">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Admin
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     VUE OPÉRATEUR
+══════════════════════════════════════════ -->
+<div class="view active" id="view-operator">
+  <div id="op-content"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     VUE TABLEAU DE BORD
+══════════════════════════════════════════ -->
+<div class="view" id="view-dashboard">
+  <div id="db-content"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     VUE ADMIN
+══════════════════════════════════════════ -->
+<div class="view" id="view-admin">
+  <div id="admin-content"></div>
+</div>
+
+<!-- MODAL QR -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal-box">
+    <div id="qr-modal-title" style="font-size:17px;font-weight:700;margin-bottom:4px"></div>
+    <div id="qr-modal-sub" style="font-size:12px;color:#9CA3AF;margin-bottom:8px"></div>
+    <canvas id="qr-canvas" width="220" height="220"></canvas>
+    <div id="qr-modal-url" style="font-size:11px;color:#9CA3AF;word-break:break-all;margin-bottom:14px"></div>
+    <div style="font-size:12px;color:#6B7280;margin-bottom:14px">
+      Plastifiez et collez sur le poste de travail
+    </div>
+    <button class="btn btn-secondary btn-sm" style="width:100%" onclick="closeQR()">Fermer</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA — état de l'usine (en démo, localStorage persiste)
+// ═══════════════════════════════════════════════════════════
+const STORE_KEY = 'tpmconnect_data';
+
+function defaultData(){
+  return {
+    machines:[
+      {id:'PR-01',name:'Presse 01',cat:'Presse'},
+      {id:'PR-02',name:'Presse 02',cat:'Presse'},
+      {id:'PR-03',name:'Presse 03',cat:'Presse'},
+      {id:'FR-01',name:'Fraiseuse 01',cat:'Fraisage'},
+      {id:'FR-02',name:'Fraiseuse 02',cat:'Fraisage'},
+      {id:'TO-01',name:'Tour 01',cat:'Tournage'},
+      {id:'LG-01',name:'Ligne assemblage A',cat:'Ligne'},
+      {id:'LG-02',name:'Ligne assemblage B',cat:'Ligne'},
+    ],
+    operators:{
+      'Presse':['Marie D.','Karim B.','Luc M.','Sofia A.'],
+      'Fraisage':['Yann T.','Pierre C.','Amine R.'],
+      'Tournage':['Sophie L.','Marc B.'],
+      'Ligne':['Amine R.','Nadia F.','Jean P.','Karim B.'],
+    },
+    questions:{
+      'Presse':["Niveau d'huile hydraulique","Contrôle des barrières immatérielles","État des joints et garnitures","Pression de serrage (manomètre)","Nettoyage du bac de récupération"],
+      'Fraisage':["Niveau d'huile de broche","État des fraises (usure visible)","Serrage des brides","Lubrification des glissières"],
+      'Tournage':["État de la pointe de centrage","Niveau de liquide de coupe","Mandrin : usure des mâchoires"],
+      'Ligne':["Capteurs de présence opérationnels","Convoyeur : tension de courroie","Arrêts d'urgence testés","Vérification des préhenseurs"],
+    },
+    history: [],
+    todayDate: today(),
+    todayRecords: {}
+  };
+}
+
+function today(){ return new Date().toLocaleDateString('fr-FR'); }
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      // Reset daily records if new day
+      if(d.todayDate !== today()){ d.todayDate = today(); d.todayRecords = {}; }
+      return d;
+    }
+  }catch(e){}
+  return defaultData();
+}
+
+function saveData(){ localStorage.setItem(STORE_KEY, JSON.stringify(APP)); }
+
+let APP = loadData();
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+let currentView = 'operator';
+function nav(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.topbar-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('tab-'+v).classList.add('active');
+  currentView = v;
+  if(v==='operator') renderOperator();
+  else if(v==='dashboard') renderDashboard();
+  else renderAdmin();
+}
+
+// ═══════════════════════════════════════════════════════════
+// URL PARAMS — lecture du QR Code
+// ═══════════════════════════════════════════════════════════
+function getParam(k){ return new URLSearchParams(window.location.search).get(k); }
+
+// ═══════════════════════════════════════════════════════════
+// VUE OPÉRATEUR
+// ═══════════════════════════════════════════════════════════
+let opState = {
+  machineId: getParam('machine') || '',
+  operatorName: '',
+  answers: {},
+  submitted: false,
+  anomalyNotes: {}
+};
+
+function getRecord(machineId){ return APP.todayRecords[machineId] || null; }
+function getCat(machineId){
+  const m = APP.machines.find(x=>x.id===machineId);
+  return m ? m.cat : null;
+}
+function getMachineName(machineId){
+  const m = APP.machines.find(x=>x.id===machineId);
+  return m ? m.name : machineId;
+}
+
+function renderOperator(){
+  const c = document.getElementById('op-content');
+
+  // Already submitted today?
+  if(opState.submitted){
+    const hasIssue = Object.values(opState.answers).some(a=>a==='ko');
+    c.innerHTML = `
+    <div class="success-screen">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="section-title">TPM validée ✓</div>
+      <div style="font-size:14px;color:#6B7280;margin:6px 0 20px">${getMachineName(opState.machineId)} — ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+      ${hasIssue ? `<div class="alert-banner" style="text-align:left">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span><strong>Anomalie signalée</strong> — Une alerte a été envoyée à la maintenance.</span>
+      </div>` : ''}
+      <div style="background:#F0FDF4;border:1px solid #6EE7B7;border-radius:12px;padding:14px;font-size:13px;color:#065F46;margin-bottom:20px">
+        Fiche enregistrée. Le tableau de bord responsable a été mis à jour.
+      </div>
+      <button class="btn btn-secondary" onclick="resetOp()">Nouvelle saisie</button>
+    </div>`;
+    return;
+  }
+
+  const machines = APP.machines;
+  const cat = getCat(opState.machineId);
+  const ops = cat ? (APP.operators[cat] || []) : [];
+  const questions = cat ? (APP.questions[cat] || []) : [];
+  const answered = Object.keys(opState.answers).length;
+  const allDone = opState.machineId && opState.operatorName && answered === questions.length && questions.length > 0;
+
+  // Check if already done today
+  const existingRecord = opState.machineId ? getRecord(opState.machineId) : null;
+
+  let html = `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="section-title">Contrôle TPM</div>
+    <span class="badge badge-gray">${new Date().toLocaleDateString('fr-FR')}</span>
+  </div>
+  <div class="section-sub">Sélectionnez votre machine et votre nom</div>
+
+  ${opState.machineId && existingRecord ? `
+  <div class="qr-demo-note">
+    ✓ La TPM de cette machine a déjà été faite ce matin par <strong>${existingRecord.operator}</strong> à ${existingRecord.time}.
+  </div>` : ''}
+
+  <div class="card">
+    <label class="lbl">Machine
+      ${opState.machineId && getParam('machine') ? '<span class="badge badge-teal" style="float:right;font-size:11px">📷 Lu par QR Code</span>' : ''}
+    </label>
+    <select onchange="selectMachine(this.value)" ${opState.machineId && getParam('machine') ? 'style="border-color:var(--teal);background:#F0FDF4"' : ''}>
+      <option value="">— Choisir une machine —</option>
+      ${machines.map(m=>`<option value="${m.id}" ${opState.machineId===m.id?'selected':''}>${m.name} (${m.cat})</option>`).join('')}
+    </select>
+
+    <label class="lbl" style="margin-top:14px">Votre nom ${!opState.machineId?'<span style="color:#9CA3AF;font-weight:400">(choisir machine d\'abord)</span>':'<span style="color:var(--teal);font-weight:500">→ Sélectionnez votre nom</span>'}</label>
+    <select id="op-name-select" onchange="selectOp(this.value)" ${!opState.machineId?'disabled':''}>
+      <option value="">— Sélectionner votre nom —</option>
+      ${ops.map(o=>`<option value="${o}" ${opState.operatorName===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    ${cat ? `<div class="hint">✓ Liste filtrée — opérateurs habilités sur les <strong>${cat}s</strong> uniquement</div>` : ''}
+  </div>`;
+
+  if(opState.operatorName && questions.length > 0){
+    html += `
+    ${opState.machineId ? `<div class="machine-header">
+      <div class="cat-tag">${cat}</div>
+      <h2>${getMachineName(opState.machineId)}</h2>
+      <p>Opérateur : ${opState.operatorName}</p>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-title">Points de contrôle</div>
+      ${questions.map((q,i)=>{
+        const ans = opState.answers[i] || '';
+        return `<div class="check-row">
+          <span class="check-q">${q}</span>
+          <div class="radio-pair">
+            <button class="radio-btn ${ans==='ok'?'ok-active':''}" onclick="setAns(${i},'ok')">✓ OK</button>
+            <button class="radio-btn ${ans==='ko'?'ko-active':''}" onclick="setAns(${i},'ko')">⚠ Pb</button>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="pfill" style="width:${Math.round(answered/questions.length*100)}%"></div></div>
+        <div class="progress-label">${answered}/${questions.length} points renseignés</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="submitTPM()" ${allDone?'':'disabled'}>
+      Valider la TPM du matin
+    </button>
+    ${!allDone ? `<div style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:8px">Répondez à tous les points pour valider</div>` : ''}`;
+  }
+
+  c.innerHTML = html;
+}
+
+function selectMachine(id){
+  opState.machineId = id;
+  opState.operatorName = '';
+  opState.answers = {};
+  // Update URL without reload (pour le partage)
+  if(id) history.replaceState(null,'','?machine='+id);
+  renderOperator();
+}
+
+function selectOp(name){
+  opState.operatorName = name;
+  renderOperator();
+}
+
+function setAns(i, val){
+  opState.answers[i] = val;
+  // Update progress bar without full re-render for speed
+  const questions = APP.questions[getCat(opState.machineId)] || [];
+  const pct = Math.round(Object.keys(opState.answers).length / questions.length * 100);
+  const pf = document.getElementById('pfill');
+  if(pf) pf.style.width = pct+'%';
+  // Re-render buttons only
+  document.querySelectorAll('.check-row').forEach((row,idx)=>{
+    const ans = opState.answers[idx] || '';
+    const btns = row.querySelectorAll('.radio-btn');
+    if(btns[0]) btns[0].className = 'radio-btn'+(ans==='ok'?' ok-active':'');
+    if(btns[1]) btns[1].className = 'radio-btn'+(ans==='ko'?' ko-active':'');
+  });
+  // Update validate button
+  const questions2 = APP.questions[getCat(opState.machineId)] || [];
+  const allDone = opState.machineId && opState.operatorName && Object.keys(opState.answers).length === questions2.length && questions2.length > 0;
+  const btn = document.querySelector('.btn-primary');
+  if(btn) btn.disabled = !allDone;
+  // Update label
+  const lbl = document.querySelector('.progress-label');
+  if(lbl) lbl.textContent = `${Object.keys(opState.answers).length}/${questions2.length} points renseignés`;
+}
+
+function submitTPM(){
+  const cat = getCat(opState.machineId);
+  const questions = APP.questions[cat] || [];
+  if(Object.keys(opState.answers).length !== questions.length) return;
+
+  const hasIssue = Object.values(opState.answers).some(a=>a==='ko');
+  const record = {
+    machineId: opState.machineId,
+    machineName: getMachineName(opState.machineId),
+    operator: opState.operatorName,
+    cat: cat,
+    time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+    date: today(),
+    answers: {...opState.answers},
+    anomaly: hasIssue,
+    questions: [...questions]
+  };
+
+  APP.todayRecords[opState.machineId] = record;
+  APP.history.unshift(record);
+  if(APP.history.length > 200) APP.history = APP.history.slice(0,200);
+  saveData();
+
+  opState.submitted = true;
+  renderOperator();
+}
+
+function resetOp(){
+  opState = { machineId: getParam('machine') || '', operatorName:'', answers:{}, submitted:false };
+  renderOperator();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VUE TABLEAU DE BORD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard(){
+  const c = document.getElementById('db-content');
+  const machines = APP.machines;
+  const records = APP.todayRecords;
+  const done = machines.filter(m=>records[m.id]).length;
+  const issues = machines.filter(m=>records[m.id]&&records[m.id].anomaly).length;
+  const pct = machines.length ? Math.round(done/machines.length*100) : 0;
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+  let html = `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="section-title">Tableau de bord</div>
+    <span style="font-size:12px;color:#9CA3AF">Màj ${now}</span>
+  </div>
+  <div class="section-sub">État TPM du matin — ${today()}</div>
+
+  ${issues > 0 ? `<div class="alert-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div><strong>${issues} anomalie${issues>1?'s':''} signalée${issues>1?'s':''}</strong><br>
+    ${machines.filter(m=>records[m.id]&&records[m.id].anomaly).map(m=>`${m.name} (${records[m.id].operator}, ${records[m.id].time})`).join(' · ')}
+    </div>
+  </div>` : ''}
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" style="color:#10B981">${done}</div>
+      <div class="stat-lbl">Validées</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#9CA3AF">${machines.length-done}</div>
+      <div class="stat-lbl">En attente</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${pct}%</div>
+      <div class="stat-lbl">Remplissage</div>
+      <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+  </div>
+
+  <div class="machine-grid">
+    ${machines.map(m=>{
+      const r = records[m.id];
+      const cls = r ? (r.anomaly?'issue':'done') : '';
+      return `<div class="machine-tile ${cls}">
+        <div class="tile-name">${m.name}</div>
+        <div style="margin-bottom:6px"><span class="badge badge-gray" style="font-size:11px">${m.cat}</span></div>
+        ${r ? `
+          <div class="tile-info"><span class="dot ${r.anomaly?'dot-red':'dot-green'}"></span> ${r.anomaly?'Anomalie':'Validé'}</div>
+          <div class="tile-info" style="margin-top:3px">${r.operator} · ${r.time}</div>
+        ` : `<div class="tile-info"><span class="dot dot-gray"></span> En attente</div>`}
+      </div>`;
+    }).join('')}
+  </div>
+
+  ${done > 0 ? `<div class="card">
+    <div class="card-title">Historique du jour</div>
+    <table class="tbl">
+      <thead><tr><th>Machine</th><th>Opérateur</th><th>Heure</th><th>Statut</th></tr></thead>
+      <tbody>
+        ${machines.filter(m=>records[m.id]).map(m=>{
+          const r = records[m.id];
+          return `<tr>
+            <td style="font-weight:600">${m.name}</td>
+            <td>${r.operator}</td>
+            <td style="font-variant-numeric:tabular-nums;color:#6B7280">${r.time}</td>
+            <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>` : `<div style="text-align:center;padding:30px 20px;color:#9CA3AF;font-size:14px">
+    Aucune TPM validée pour l'instant ce matin.
+  </div>`}`;
+
+  c.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// VUE ADMIN
+// ═══════════════════════════════════════════════════════════
+let adminState = { locked: true, pass:'', addingMachine:false, newName:'', newCat:'Presse' };
+const ADMIN_CODE = '1234';
+
+function renderAdmin(){
+  const c = document.getElementById('admin-content');
+
+  if(adminState.locked){
+    c.innerHTML = `
+    <div class="lock-screen">
+      <div class="lock-box">
+        <div class="lock-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <div class="section-title" style="margin-bottom:6px">Accès superviseur</div>
+        <div class="section-sub">Code de démo : 1234</div>
+        <label class="lbl">Code secret</label>
+        <input type="password" placeholder="••••" id="admin-pass" oninput="adminState.pass=this.value" onkeydown="if(event.key==='Enter')tryAdmin()">
+        <button class="btn btn-primary" style="margin-top:10px" onclick="tryAdmin()">Accéder</button>
+        <div id="admin-err" style="color:#E84040;font-size:13px;margin-top:8px;display:none">Code incorrect</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const cats = Object.keys(APP.questions);
+
+  c.innerHTML = `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="section-title">Administration</div>
+    <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
+  </div>
+  <div class="section-sub">Gestion des machines et des contrôles — sans code informatique</div>
+
+  <!-- MACHINES -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin-bottom:0">Parc machine (${APP.machines.length})</div>
+      <button class="btn btn-secondary btn-sm" onclick="toggleAddMachine()">+ Ajouter</button>
+    </div>
+
+    ${adminState.addingMachine ? `
+    <div style="background:#F0FDF4;border:1px solid #6EE7B7;border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label class="lbl" style="margin-top:0">Nom</label>
+          <input type="text" class="add-field" placeholder="Ex: Presse 12" id="new-mname" value="${adminState.newName}" oninput="adminState.newName=this.value">
+        </div>
+        <div>
+          <label class="lbl" style="margin-top:0">Catégorie</label>
+          <select id="new-mcat" onchange="adminState.newCat=this.value" style="margin-top:6px">
+            ${cats.map(c=>`<option ${adminState.newCat===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer et voir le QR Code</button>
+    </div>` : ''}
+
+    <table class="tbl">
+      <thead><tr><th>Machine</th><th>Catégorie</th><th>Aujourd'hui</th><th>QR Code</th></tr></thead>
+      <tbody>
+        ${APP.machines.map(m=>{
+          const r = APP.todayRecords[m.id];
+          return `<tr>
+            <td style="font-weight:600">${m.name}</td>
+            <td><span class="badge badge-teal">${m.cat}</span></td>
+            <td>${r?(r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`):`<span class="badge badge-gray">—</span>`}</td>
+            <td><button class="btn btn-secondary btn-sm" onclick="showQR('${m.id}')">QR</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- QUESTIONS -->
+  <div class="card">
+    <div class="card-title">Questions de contrôle</div>
+    ${cats.map(cat=>`
+    <div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span class="badge badge-teal">${cat}</span>
+        <button class="btn btn-secondary btn-sm" onclick="addQuestion('${cat}')">+ Ajouter</button>
+      </div>
+      ${APP.questions[cat].map((q,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:14px">
+        <span style="flex:1;padding-right:8px">${q}</span>
+        <button onclick="removeQ('${cat}',${i})" style="background:none;border:none;color:#9CA3AF;cursor:pointer;font-size:18px;padding:2px 6px;border-radius:6px" title="Supprimer">×</button>
+      </div>`).join('')}
+    </div>`).join('')}
+  </div>
+
+  <!-- RESET JOURNEE -->
+  <div class="card">
+    <div class="card-title">Données du jour</div>
+    <p style="font-size:14px;color:#6B7280;margin-bottom:12px">
+      ${Object.keys(APP.todayRecords).length} TPM validée(s) aujourd'hui. La remise à zéro se fait automatiquement chaque matin.
+    </p>
+    <button class="btn btn-danger btn-sm" onclick="resetDay()" style="width:auto">Remettre à zéro (démo)</button>
+  </div>`;
+}
+
+function tryAdmin(){
+  const input = document.getElementById('admin-pass');
+  const val = input ? input.value : adminState.pass;
+  if(val === ADMIN_CODE){ adminState.locked=false; renderAdmin(); }
+  else{
+    const err = document.getElementById('admin-err');
+    if(err){err.style.display='block';}
+  }
+}
+
+function lockAdmin(){ adminState.locked=true; renderAdmin(); }
+
+function toggleAddMachine(){
+  adminState.addingMachine = !adminState.addingMachine;
+  renderAdmin();
+}
+
+function addMachine(){
+  const name = document.getElementById('new-mname')?.value || adminState.newName;
+  if(!name.trim()){ alert('Entrez un nom de machine'); return; }
+  const cat = adminState.newCat;
+  const catPrefix = cat.substring(0,2).toUpperCase();
+  const count = APP.machines.filter(m=>m.cat===cat).length + 1;
+  const id = `${catPrefix}-${String(count).padStart(2,'0')}`;
+  APP.machines.push({id, name:name.trim(), cat});
+  adminState.newName=''; adminState.addingMachine=false;
+  saveData();
+  renderAdmin();
+  setTimeout(()=>showQR(id), 100);
+}
+
+function addQuestion(cat){
+  const q = prompt(`Nouvelle question pour "${cat}" :`);
+  if(q && q.trim()){ APP.questions[cat].push(q.trim()); saveData(); renderAdmin(); }
+}
+
+function removeQ(cat, i){
+  if(confirm('Supprimer ce point de contrôle ?')){ APP.questions[cat].splice(i,1); saveData(); renderAdmin(); }
+}
+
+function resetDay(){
+  if(confirm('Remettre à zéro toutes les TPM du jour ?')){
+    APP.todayRecords={};saveData();renderAdmin();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// QR CODE GENERATOR (algorithme complet)
+// ═══════════════════════════════════════════════════════════
+function showQR(machineId){
+  const m = APP.machines.find(x=>x.id===machineId);
+  if(!m) return;
+  const url = window.location.origin + window.location.pathname + '?machine=' + machineId;
+
+  document.getElementById('qr-modal-title').textContent = m.name;
+  document.getElementById('qr-modal-sub').textContent = m.cat + ' — ' + machineId;
+  document.getElementById('qr-modal-url').textContent = url;
+  document.getElementById('qr-modal').classList.add('open');
+
+  // Draw QR
+  drawQR('qr-canvas', url);
+}
+
+function closeQR(){
+  document.getElementById('qr-modal').classList.remove('open');
+}
+
+// Close on overlay click
+document.getElementById('qr-modal').addEventListener('click', function(e){
+  if(e.target === this) closeQR();
+});
+
+// ── QR Code via QRCode.js (fiable, scannable) ──────────────
+function drawQR(canvasId, text){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const parent = canvas.parentNode;
+  // Remplace le canvas par un div pour QRCode.js
+  const div = document.createElement('div');
+  div.id = canvasId + '-div';
+  div.style.cssText = 'display:inline-block;background:#fff;padding:8px;border-radius:4px';
+  parent.replaceChild(div, canvas);
+  new QRCode(div, {
+    text: text,
+    width: 204,
+    height: 204,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderOperator();
+
+// Si QR Code avec ?machine=xxx → focus sur le select opérateur après rendu
+if(getParam('machine')){
+  // Scroll doux vers le select "Votre nom" et focus dessus
+  setTimeout(()=>{
+    const selOp = document.getElementById('op-name-select');
+    if(selOp){
+      selOp.scrollIntoView({behavior:'smooth', block:'center'});
+      selOp.focus();
+    }
+  }, 100);
+}
+</script>
+</body>
+</html>
