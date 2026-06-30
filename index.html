@@ -193,7 +193,7 @@ option{background:var(--bg3)}
 // ════════════════════════════════════════════
 // CONFIG — URL de ton Google Apps Script déployé
 // ════════════════════════════════════════════
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxMLSdYEyhDx67MvYErmg29uLmb_qQnGfMolfOc7XxjYi9JJGxyVPe-ODHbbat5cRbNCg/exec';
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
 
 function today(){ return new Date().toLocaleDateString('fr-FR'); }
@@ -293,6 +293,17 @@ async function pushToSheet(){
 
 function saveData(){
   pushToSheet();
+}
+
+// Récupère la toute dernière version du Sheet, applique le changement par-dessus,
+// puis pousse le résultat. Réduit fortement le risque que deux appareils
+// s'écrasent mutuellement en écrivant en même temps.
+async function syncedWrite(mutator){
+  setSyncState('syncing');
+  await fetchFromSheet();
+  mutator();
+  await pushToSheet();
+  rerenderActiveView();
 }
 
 function showSyncFlash(){
@@ -464,16 +475,19 @@ function submitTPM(){
   const questions=APP.questions[cat]||[];
   if(Object.keys(opState.answers).length!==questions.length) return;
   const hasIssue=Object.values(opState.answers).some(a=>a==='ko');
-  const record={
-    machineId:opState.machineId, machineName:getMachineName(opState.machineId),
-    operator:opState.operatorName, cat, questions:[...questions],
-    time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
-    date:today(), answers:{...opState.answers}, anomaly:hasIssue
-  };
-  APP.todayRecords[opState.machineId]=record;
-  APP.history.unshift(record);
-  if(APP.history.length>200) APP.history=APP.history.slice(0,200);
-  saveData();
+  const machineId=opState.machineId, operatorName=opState.operatorName, answers={...opState.answers};
+  syncedWrite(()=>{
+    const record={
+      machineId, machineName:getMachineName(machineId),
+      operator:operatorName, cat, questions:[...questions],
+      time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+      date:today(), answers, anomaly:hasIssue
+    };
+    if(APP.todayDate!==today()){APP.todayDate=today();APP.todayRecords={};}
+    APP.todayRecords[machineId]=record;
+    APP.history.unshift(record);
+    if(APP.history.length>200) APP.history=APP.history.slice(0,200);
+  });
   opState.submitted=true;
   renderOperator();
 }
@@ -650,23 +664,34 @@ function addMachine(){
   const name=document.getElementById('new-mname')?.value||adminState.newName;
   if(!name.trim()){alert('Entrez un nom');return;}
   const cat=adminState.newCat;
-  const prefix=cat.substring(0,2).toUpperCase();
-  const count=APP.machines.filter(m=>m.cat===cat).length+1;
-  const id=`${prefix}-${String(count).padStart(2,'0')}`;
-  APP.machines.push({id,name:name.trim(),cat});
   adminState.newName='';adminState.addingMachine=false;
-  saveData();renderAdmin();
-  setTimeout(()=>showQR(id),100);
+  renderAdmin();
+  let id;
+  syncedWrite(()=>{
+    const prefix=cat.substring(0,2).toUpperCase();
+    const count=APP.machines.filter(m=>m.cat===cat).length+1;
+    id=`${prefix}-${String(count).padStart(2,'0')}`;
+    APP.machines.push({id,name:name.trim(),cat});
+  }).then(()=>{
+    renderAdmin();
+    showQR(id);
+  });
 }
 function addQuestion(cat){
   const q=prompt(`Nouvelle question pour "${cat}" :`);
-  if(q&&q.trim()){APP.questions[cat].push(q.trim());saveData();renderAdmin();}
+  if(q&&q.trim()){
+    syncedWrite(()=>{ if(!APP.questions[cat]) APP.questions[cat]=[]; APP.questions[cat].push(q.trim()); }).then(renderAdmin);
+  }
 }
 function removeQ(cat,i){
-  if(confirm('Supprimer ce point de contrôle ?')){APP.questions[cat].splice(i,1);saveData();renderAdmin();}
+  if(confirm('Supprimer ce point de contrôle ?')){
+    syncedWrite(()=>{ APP.questions[cat].splice(i,1); }).then(renderAdmin);
+  }
 }
 function resetDay(){
-  if(confirm('Remettre à zéro toutes les TPM ?')){APP.todayRecords={};saveData();renderAdmin();}
+  if(confirm('Remettre à zéro toutes les TPM ?')){
+    syncedWrite(()=>{ APP.todayRecords={}; }).then(renderAdmin);
+  }
 }
 
 // ════════════════════════════════════════════
