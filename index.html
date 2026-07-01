@@ -494,9 +494,14 @@ function extractMachineCode(raw){
   // Sinon on considère que c'est directement l'ID de la machine
   return code;
 }
+// Ne garde que lettres et chiffres, en minuscule — insensible aux tirets/symboles
+// mal transcrits par une douchette configurée dans un autre agencement clavier (QWERTY/AZERTY)
+function normalizeCode(s){
+  return (s||'').toString().toLowerCase().replace(/[^a-z0-9]/g,'');
+}
 function handleScan(raw){
   const code=extractMachineCode(raw);
-  const m=APP.machines.find(x=>x.id.toLowerCase()===code.toLowerCase());
+  const m=APP.machines.find(x=>normalizeCode(x.id)===normalizeCode(code));
   showScanDebug(raw, code, !!m);
   if(!m){
     flashScanResult(false, code);
