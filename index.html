@@ -239,11 +239,12 @@ option{background:var(--bg3)}
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
 
-// URL de base de l'app publiée — utilisée pour encoder les codes-barres
-// (le code-barres contient l'URL complète, comme un QR code, pour ouvrir
-// directement la bonne machine dès le scan avec la douchette)
-const BASE_URL = 'https://romanexiberras-creator.github.io/tpmconnect/';
-function machineURL(id){ return BASE_URL + '?machine=' + encodeURIComponent(id); }
+// Le code-barres encode simplement l'ID de la machine (ex: PR-01).
+// C'est volontairement court : plus l'ID est court, plus le code-barres
+// est court et facile à scanner. Le scan douchette gère aussi les URL
+// complètes si besoin (voir extractMachineCode), mais ce n'est pas
+// nécessaire ici.
+function machineURL(id){ return id; }
 
 // ════════════════════════════════════════════
 // GESTION SEMAINE (réinitialisation dimanche soir / minuit -> lundi)
@@ -864,10 +865,7 @@ function renderAdmin(){
   <div class="section-sub">Gestion des machines, codes-barres et suivi hebdomadaire — semaine du ${weekLabel(APP.weekKey)}</div>
 
   <div class="card" style="border-color:rgba(245,197,24,.35)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="card-title" style="margin-bottom:0">Codes-barres — un par machine, à coller sur le poste</div>
-      <button class="btn btn-primary btn-sm" onclick="printAllBC()">Imprimer tous les codes-barres</button>
-    </div>
+    <div class="card-title">Codes-barres — un par machine, à coller sur le poste</div>
     <div id="qr-thumb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px"></div>
     <div class="hint" style="margin-top:12px">Touchez un code-barres pour l'agrandir et le télécharger individuellement. Un scan à la douchette sélectionne directement cette machine.</div>
   </div>
@@ -1101,38 +1099,6 @@ function renderBCThumbGrid(){
       JsBarcode("#thumb-"+m.id, machineURL(m.id), { format:"CODE128", lineColor:"#000000", width:1, height:36, displayValue:true, fontSize:8, margin:4 });
     }catch(e){}
   });
-}
-
-// Imprime tous les codes-barres d'un coup, prêts à découper et plastifier
-function printAllBC(){
-  if(!APP.machines.length){ alert('Aucune machine à imprimer'); return; }
-  const w=window.open('', '_blank');
-  if(!w){ alert('Autorisez les pop-ups pour imprimer'); return; }
-  const cards=APP.machines.map(m=>{
-    const tmp=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    tmp.id='tmp-print-svg';
-    document.body.appendChild(tmp);
-    try{
-      JsBarcode(tmp, machineURL(m.id), { format:"CODE128", lineColor:"#000000", width:2, height:75, displayValue:true, fontSize:12, fontOptions:"bold", margin:8 });
-    }catch(e){}
-    const svgData=new XMLSerializer().serializeToString(tmp);
-    document.body.removeChild(tmp);
-    const src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgData)));
-    return `<div style="border:1px dashed #999;border-radius:6px;padding:10px;text-align:center;break-inside:avoid;margin-bottom:14px;display:inline-block">
-      <div style="font-family:Arial,sans-serif;font-weight:700;font-size:13px;margin-bottom:4px">${m.name}</div>
-      <div style="font-family:Arial,sans-serif;font-size:10px;color:#666;margin-bottom:6px">${m.cat}</div>
-      <img src="${src}" style="max-width:260px">
-    </div>`;
-  }).join('');
-  w.document.write(`<!DOCTYPE html><html><head><title>Codes-barres TPMConnect</title>
-    <style>
-      body{font-family:Arial,sans-serif;padding:20px}
-      .grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:flex-start}
-      @media print{ body{padding:0} }
-    </style></head>
-    <body><div class="grid">${cards}</div></body></html>`);
-  w.document.close();
-  setTimeout(()=>{ w.focus(); w.print(); }, 400);
 }
 
 function closeBC(){document.getElementById('bc-modal').classList.remove('open');}
