@@ -497,6 +497,7 @@ function extractMachineCode(raw){
 function handleScan(raw){
   const code=extractMachineCode(raw);
   const m=APP.machines.find(x=>x.id.toLowerCase()===code.toLowerCase());
+  showScanDebug(raw, code, !!m);
   if(!m){
     flashScanResult(false, code);
     return;
@@ -504,6 +505,20 @@ function handleScan(raw){
   flashScanResult(true, m.name);
   nav('operator');
   selectMachine(m.id, true);
+}
+// Affiche ce qui a été reçu, en clair, pour diagnostiquer un souci de disposition clavier (AZERTY/QWERTY) sur la douchette
+function showScanDebug(raw, parsed, matched){
+  const box=document.getElementById('scan-debug');
+  if(!box) return;
+  const idsList = APP.machines.map(x=>x.id).join(', ');
+  box.style.display='block';
+  box.style.borderColor = matched ? 'rgba(34,197,94,.4)' : 'rgba(232,64,64,.4)';
+  box.innerHTML = `
+    <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔍 Dernier scan reçu</div>
+    <div style="font-family:var(--font-mono);font-size:18px;color:${matched?'var(--green)':'var(--red)'};word-break:break-all">"${raw}"</div>
+    <div style="font-size:13px;color:var(--gray);margin-top:6px">Code interprété : <span class="mono" style="color:var(--text)">${parsed}</span> (${raw.length} caractère${raw.length>1?'s':''})</div>
+    <div style="font-size:13px;color:var(--gray);margin-top:4px">${matched?'✓ Correspond à une machine':'✗ Ne correspond à aucun ID connu. IDs existants : '+idsList}</div>
+  `;
 }
 function flashScanResult(ok, label){
   const lbl=document.getElementById('sync-label');
@@ -631,6 +646,8 @@ function renderOperator(){
     <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><line x1="6" y1="6" x2="6" y2="18"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="13" y1="6" x2="13" y2="18"/><line x1="16" y1="6" x2="16" y2="18"/><line x1="19" y1="6" x2="19" y2="18"/></svg>
     <span>Prêt à scanner — la machine se sélectionne automatiquement dès le scan du code-barres</span>
   </div>
+
+  <div id="scan-debug" class="card" style="display:none;border:1px solid var(--border2)"></div>
 
   ${urgent && pendingCount>0 ? `<div class="warn-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
