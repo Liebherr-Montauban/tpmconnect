@@ -490,9 +490,16 @@ function extractMachineCode(raw){
   // Sinon on considère que c'est directement l'ID de la machine
   return code;
 }
+// Normalise une chaîne pour la comparaison : ne garde que lettres et chiffres,
+// en majuscules. Ça rend le scan tolérant aux soucis de disposition clavier
+// de la douchette (ex: le tiret "-" qui ressort en "°" si la douchette est
+// configurée sur une disposition différente de celle de l'ordinateur).
+function normalizeCode(s){ return (s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
 function handleScan(raw){
   const code=extractMachineCode(raw);
-  const m=APP.machines.find(x=>x.id.toLowerCase()===code.toLowerCase());
+  const target=normalizeCode(code);
+  const m=APP.machines.find(x=>normalizeCode(x.id)===target);
   if(!m){
     flashScanResult(false, code);
     return;
