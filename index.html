@@ -139,6 +139,10 @@ option{background:var(--bg3)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:var(--bg3)}
 .mono{font-family:var(--font-mono)}
+.tbl-fixed{table-layout:fixed}
+.tbl-fixed td{overflow:hidden}
+.cell-clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%}
+.cell-wrap{overflow-wrap:break-word;word-break:break-word}
  
 .success-screen{text-align:center;padding:56px 26px}
 .success-icon{width:92px;height:92px;background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
@@ -1152,31 +1156,37 @@ function renderAdmin(){
       </div>
       <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + Code-barres</button>
     </div>`:''}
-    <table class="tbl">
-      <thead><tr><th>Machine</th><th>ID / Code</th><th>Catégorie</th><th>Code-barres</th><th>Fiche instruction</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${APP.machines.map(m=>{
-          const sheet=getInstructionSheet(m.id);
-          return `<tr>
-            <td style="font-weight:600">${m.name}</td>
-            <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${m.id}</td>
-            <td><select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;padding:7px 10px;font-size:13px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select></td>
-            <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Voir / Imprimer</button></td>
-            <td style="max-width:220px">${sheet?`
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <span class="badge badge-green" style="width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">📄 ${sheet.fileName}</span>
-                <div style="display:flex;gap:5px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${APP.machines.map(m=>{
+        const sheet=getInstructionSheet(m.id);
+        return `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+            <div style="min-width:0">
+              <div style="font-weight:700;font-size:18px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
+              <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">${m.id}</div>
+            </div>
+            <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteMachine('${m.id}')">Supprimer</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+            <select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;flex:1;min-width:130px;padding:9px 12px;font-size:14px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select>
+            <button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Code-barres</button>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:12px">
+            <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Fiche d'instruction</div>
+            ${sheet?`
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span class="badge badge-green cell-clip" style="width:fit-content;max-width:100%">📄 ${sheet.fileName}</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="btn btn-secondary btn-sm" onclick="viewInstructionSheet('${m.id}')">Voir</button>
                   <button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">Modifier</button>
                   <button class="btn btn-danger btn-sm" onclick="deleteInstructionSheet('${m.id}')">Retirer</button>
                 </div>
               </div>
-            `:`<button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">+ Lier un PDF</button>`}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteMachine('${m.id}')">Supprimer</button></td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
+            `:`<button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">+ Lier un PDF</button>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
     <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans le Sheet : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
   </div>
  
