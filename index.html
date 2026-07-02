@@ -498,10 +498,37 @@ function extractMachineCode(raw){
 function normalizeCode(s){
   return (s||'').toString().toLowerCase().replace(/[^a-z0-9]/g,'');
 }
+// ════════════════════════════════════════════
+// SÉCURITÉ SCAN — filet de rattrapage clavier AZERTY/QWERTY
+// Quand l'état Majuscule (Verr.Maj / Shift) attendu par la douchette n'est
+// pas le bon, elle envoie les chiffres de la rangée du haut sous forme de
+// symboles AZERTY non-shiftés (0->à, 7->è, 1->&, etc.). Ces caractères
+// étaient jusqu'ici simplement supprimés par normalizeCode, ce qui faisait
+// disparaître les chiffres de l'ID (ex: "PR-07" reçu comme "PR)àè").
+// On "retraduit" ces symboles en chiffres avant de normaliser, en plus de
+// la normalisation classique, et on teste les deux versions.
+// ════════════════════════════════════════════
+const AZERTY_DIGIT_MAP = {'&':'1','é':'2','"':'3',"'":'4','(':'5','-':'6','è':'7','_':'8','ç':'9','à':'0','§':'6'};
+function azertyDigitFix(s){
+  return (s||'').toString().replace(/[&é"'(\-è_çà§]/g, ch => AZERTY_DIGIT_MAP[ch] || ch);
+}
+// Cherche la machine correspondant au code scanné : normalisation classique
+// d'abord, puis en filet de sécurité, la version "chiffres AZERTY retraduits".
+function findMachineByCode(code){
+  const nStandard = normalizeCode(code);
+  let m = APP.machines.find(x=>normalizeCode(x.id)===nStandard);
+  if(m) return {machine:m, viaFallback:false};
+  const nFixed = normalizeCode(azertyDigitFix(code));
+  if(nFixed !== nStandard){
+    m = APP.machines.find(x=>normalizeCode(x.id)===nFixed);
+    if(m) return {machine:m, viaFallback:true};
+  }
+  return {machine:null, viaFallback:false};
+}
 function handleScan(raw){
   const code=extractMachineCode(raw);
-  const m=APP.machines.find(x=>normalizeCode(x.id)===normalizeCode(code));
-  showScanDebug(raw, code, !!m);
+  const {machine:m, viaFallback}=findMachineByCode(code);
+  showScanDebug(raw, code, !!m, viaFallback);
   if(!m){
     flashScanResult(false, code);
     return;
@@ -511,7 +538,7 @@ function handleScan(raw){
   selectMachine(m.id, true);
 }
 // Affiche ce qui a été reçu, en clair, pour diagnostiquer un souci de disposition clavier (AZERTY/QWERTY) sur la douchette
-function showScanDebug(raw, parsed, matched){
+function showScanDebug(raw, parsed, matched, viaFallback){
   const box=document.getElementById('scan-debug');
   if(!box) return;
   const idsList = APP.machines.map(x=>x.id).join(', ');
@@ -521,6 +548,7 @@ function showScanDebug(raw, parsed, matched){
     <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Dernier scan reçu</div>
     <div style="font-family:var(--font-mono);font-size:18px;color:${matched?'var(--green)':'var(--red)'};word-break:break-all">"${raw}"</div>
     <div style="font-size:13px;color:var(--gray);margin-top:6px">Code interprété : <span class="mono" style="color:var(--text)">${parsed}</span> (${raw.length} caractère${raw.length>1?'s':''})</div>
+    ${viaFallback?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">⚠ Correction clavier AZERTY appliquée (chiffres retraduits) — vérifiez la machine sélectionnée</div>`:''}
     <div style="font-size:13px;color:var(--gray);margin-top:4px">${matched?'Correspond à une machine':'Ne correspond à aucun ID connu. IDs existants : '+idsList}</div>
   `;
 }
