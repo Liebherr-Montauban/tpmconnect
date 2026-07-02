@@ -1,4 +1,7 @@
 
+
+Tpmconnect · HTML
+ 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -31,9 +34,9 @@
   --font-mono:'JetBrains Mono',ui-monospace,monospace;
 }
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:19px}
-
+ 
 .hazard{height:7px;background:var(--stripe);background-size:34px 34px}
-
+ 
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:74px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{color:#fff;font-family:var(--font-head);font-size:26px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
 .logo-dot{width:18px;height:18px;border-radius:4px;background:var(--stripe);background-size:10px 10px;flex-shrink:0}
@@ -48,13 +51,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .topbar-tab{background:transparent;border:none;color:var(--gray);font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s}
 .topbar-tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .topbar-tab.active{color:var(--yellow);background:rgba(245,197,24,.1)}
-
+ 
 .view{display:none;padding:20px;max-width:820px;margin:0 auto;padding-bottom:60px}
 .view.active{display:block}
-
+ 
 .card{background:var(--bg2);border-radius:16px;padding:22px;margin-bottom:14px;border:1px solid var(--border)}
 .card-title{font-family:var(--font-head);font-size:15px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
-
+ 
 label.lbl{display:block;font-size:15px;font-weight:500;color:var(--gray);margin-bottom:6px;margin-top:14px}
 label.lbl:first-child{margin-top:0}
 select,input[type=text],input[type=password]{
@@ -65,8 +68,8 @@ select,input[type=text],input[type=password]{
 select:focus,input:focus{outline:none;border-color:var(--yellow)}
 select:disabled{background:var(--bg2);color:var(--gray2)}
 option{background:var(--bg3)}
-
-
+ 
+ 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:17px 24px;border-radius:11px;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;width:100%}
 .btn-primary{background:var(--yellow);color:#000}
 .btn-primary:hover{background:var(--yellow2)}
@@ -75,13 +78,13 @@ option{background:var(--bg3)}
 .btn-secondary:hover{border-color:var(--gray)}
 .btn-danger{background:rgba(232,64,64,.1);color:var(--red);border:1px solid rgba(232,64,64,.3)}
 .btn-sm{padding:10px 18px;font-size:14px;width:auto;border-radius:9px}
-
+ 
 .machine-header{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
 .machine-header::before{content:'';position:absolute;top:0;left:0;right:0;height:7px;background:var(--stripe);background-size:28px 28px}
 .machine-header .cat-tag{display:inline-block;background:var(--yellow-dim);color:var(--yellow);font-size:13px;font-weight:700;padding:5px 13px;border-radius:20px;margin-bottom:9px;letter-spacing:.5px;text-transform:uppercase}
 .machine-header h2{font-family:var(--font-head);font-size:30px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;color:#fff}
 .machine-header p{color:var(--gray);font-size:16px}
-
+ 
 .check-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border)}
 .check-row:last-child{border-bottom:none}
 .check-q{font-size:17px;flex:1;padding-right:14px;line-height:1.4;color:var(--text)}
@@ -90,19 +93,19 @@ option{background:var(--bg3)}
 .radio-btn:hover{border-color:var(--gray)}
 .radio-btn.ok-active{background:rgba(34,197,94,.12);border-color:#22C55E;color:#22C55E}
 .radio-btn.ko-active{background:rgba(232,64,64,.12);border-color:var(--red);color:var(--red)}
-
+ 
 .progress-wrap{margin-top:16px}
 .progress-bar{height:6px;background:var(--border2);border-radius:3px;overflow:hidden;margin-bottom:7px}
 .progress-fill{height:100%;background:var(--yellow);border-radius:3px;transition:width .3s}
 .progress-label{font-size:14px;color:var(--gray)}
-
+ 
 .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:14px;font-weight:600}
 .badge-green{background:rgba(34,197,94,.12);color:#22C55E}
 .badge-red{background:rgba(232,64,64,.12);color:var(--red)}
 .badge-yellow{background:var(--yellow-dim);color:var(--yellow)}
 .badge-orange{background:rgba(245,158,11,.12);color:var(--orange)}
 .badge-gray{background:var(--bg3);color:var(--gray);border:1px solid var(--border2)}
-
+ 
 .machine-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px}
 .machine-tile{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:17px;cursor:pointer;transition:all .2s}
 .machine-tile:hover{border-color:var(--border2)}
@@ -117,67 +120,67 @@ option{background:var(--bg3)}
 .dot-red{background:var(--red)}
 .dot-gray{background:var(--gray2)}
 .dot-orange{background:var(--orange)}
-
+ 
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:14px}
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center}
 .stat-num{font-family:var(--font-mono);font-size:36px;font-weight:700;font-variant-numeric:tabular-nums}
 .stat-lbl{font-size:13px;color:var(--gray);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
-
+ 
 .alert-banner{background:rgba(232,64,64,.08);border:1px solid rgba(232,64,64,.3);border-radius:13px;padding:16px 18px;margin-bottom:14px;font-size:16px;color:#f87171;display:flex;align-items:flex-start;gap:10px}
 .alert-banner svg{flex-shrink:0;margin-top:1px;width:18px;height:18px}
-
+ 
 .warn-banner{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:13px;padding:16px 18px;margin-bottom:14px;font-size:16px;color:var(--orange);display:flex;align-items:flex-start;gap:10px}
 .warn-banner svg{flex-shrink:0;margin-top:1px;width:18px;height:18px}
-
+ 
 .info-banner{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:12px;padding:14px 18px;font-size:16px;color:var(--yellow);margin-bottom:14px}
-
+ 
 .scan-banner{background:rgba(34,197,94,.06);border:1px dashed rgba(34,197,94,.35);border-radius:13px;padding:18px;margin-bottom:14px;font-size:16px;color:#4ade80;display:flex;align-items:center;gap:12px}
 .scan-banner svg{flex-shrink:0;width:26px;height:26px}
-
+ 
 .tbl{width:100%;border-collapse:collapse;font-size:16px}
 .tbl th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border2);font-weight:700;color:var(--gray);font-size:13px;text-transform:uppercase;letter-spacing:.6px;font-family:var(--font-head)}
 .tbl td{padding:13px 12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:var(--bg3)}
 .mono{font-family:var(--font-mono)}
-
+ 
 .success-screen{text-align:center;padding:56px 26px}
 .success-icon{width:92px;height:92px;background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
 .success-icon svg{width:44px;height:44px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-
+ 
 .lock-screen{display:flex;align-items:center;justify-content:center;min-height:60vh}
 .lock-box{width:100%;max-width:380px;text-align:center}
 .lock-icon{width:74px;height:74px;background:var(--yellow-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;border:1px solid rgba(245,197,24,.2)}
 .lock-icon svg{width:32px;height:32px;stroke:var(--yellow);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
+ 
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
 .modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center}
 .modal-box.wide{max-width:520px;text-align:left}
-
+ 
 .section-title{font-family:var(--font-head);font-size:28px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;color:#fff}
 .section-sub{font-size:16px;color:var(--gray);margin-bottom:18px}
 .hint{font-size:14px;color:var(--gray2);margin-top:7px;padding:10px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border)}
-
+ 
 .live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);color:var(--green);font-size:13px;font-weight:700;padding:4px 11px;border-radius:20px;border:1px solid rgba(34,197,94,.2)}
 .live-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
-
+ 
 .spinner{width:17px;height:17px;border:3px solid var(--border2);border-top-color:var(--yellow);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
+ 
 .toggle-link{background:none;border:none;color:var(--yellow);font-size:15px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
-
+ 
 .week-group{margin-bottom:18px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .week-group-head{background:var(--bg3);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .week-group-head:hover{background:var(--bg4)}
 .week-group-title{font-family:var(--font-head);font-size:17px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.3px}
 .week-group-body{padding:0 4px}
-
+ 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
-
+ 
 <div class="topbar">
   <div class="logo"><div class="logo-dot"></div>TPM<span>Connect</span></div>
   <div style="display:flex;align-items:center;gap:10px">
@@ -202,11 +205,11 @@ option{background:var(--bg3)}
   </div>
 </div>
 <div class="hazard"></div>
-
+ 
 <div class="view active" id="view-operator"><div id="op-content"></div></div>
 <div class="view" id="view-dashboard"><div id="db-content"></div></div>
 <div class="view" id="view-admin"><div id="admin-content"></div></div>
-
+ 
 <!-- Modal code-barres -->
 <div class="modal-overlay" id="bc-modal">
   <div class="modal-box">
@@ -222,7 +225,7 @@ option{background:var(--bg3)}
     </div>
   </div>
 </div>
-
+ 
 <!-- Pop-up rappel maintenance au démarrage -->
 <div class="modal-overlay" id="startup-modal">
   <div class="modal-box wide">
@@ -238,14 +241,14 @@ option{background:var(--bg3)}
     </div>
   </div>
 </div>
-
+ 
 <script>
 // ════════════════════════════════════════════
 // CONFIG — URL de ton Google Apps Script déployé (NE PAS CHANGER)
 // ════════════════════════════════════════════
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
-
+ 
 // ════════════════════════════════════════════
 // GESTION SEMAINE (réinitialisation dimanche soir / minuit -> lundi)
 // ════════════════════════════════════════════
@@ -271,7 +274,7 @@ function weekLabel(key){
 function isoDay(){ const d=new Date().getDay(); return d===0?7:d; }
 // Rappel "dépêchez-vous" actif dès jeudi (jour 4) jusqu'à dimanche (jour 7)
 function isUrgentPeriod(){ return isoDay()>=4; }
-
+ 
 function today(){ return new Date().toLocaleDateString('fr-FR'); }
 function nowTime(){ return new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
 function fmtDuration(sec){
@@ -279,11 +282,11 @@ function fmtDuration(sec){
   const m=Math.floor(sec/60), s=sec%60;
   return m>0 ? `${m} min ${String(s).padStart(2,'0')} s` : `${s} s`;
 }
-
+ 
 // Icône par catégorie de machine — repère visuel rapide sur poste industriel
 const CAT_ICON = { 'Presse':'', 'Fraisage':'', 'Tournage':'', 'Ligne':'' };
 function catIcon(cat){ return CAT_ICON[cat] || ''; }
-
+ 
 function defaultData(){
   return {
     machines:[
@@ -313,14 +316,14 @@ function defaultData(){
     weekRecords:{}     // { machineId: record } pour la semaine en cours
   };
 }
-
+ 
 let APP = defaultData();
 let lastKnownJSON = '';
 let isOnline = false;
 let initialSyncDone = false;
 let initialSyncError = false;
 let startupModalShown = false;
-
+ 
 function rolloverWeekIfNeeded(){
   const wk=currentWeekKey();
   if(APP.weekKey!==wk){
@@ -328,7 +331,7 @@ function rolloverWeekIfNeeded(){
     APP.weekRecords={};
   }
 }
-
+ 
 // ════════════════════════════════════════════
 // SYNC ENGINE — Google Sheets via Apps Script
 // ════════════════════════════════════════════
@@ -342,7 +345,7 @@ function setSyncState(state){
   else if(state==='error'){ dot.classList.add('error'); lbl.textContent='Hors-ligne'; isOnline=false; }
   else { lbl.textContent='Connexion...'; }
 }
-
+ 
 async function fetchFromSheet(){
   try{
     const res = await fetch(SHEET_API_URL + '?t=' + Date.now());
@@ -385,7 +388,7 @@ async function fetchFromSheet(){
     return false;
   }
 }
-
+ 
 async function pushToSheet(){
   setSyncState('syncing');
   try{
@@ -400,11 +403,11 @@ async function pushToSheet(){
     setSyncState('error');
   }
 }
-
+ 
 function saveData(){
   pushToSheet();
 }
-
+ 
 // Récupère la toute dernière version du Sheet, applique le changement par-dessus,
 // puis pousse le résultat. Réduit fortement le risque que deux appareils
 // s'écrasent mutuellement en écrivant en même temps.
@@ -416,7 +419,7 @@ async function syncedWrite(mutator){
   await pushToSheet();
   rerenderActiveView();
 }
-
+ 
 function showSyncFlash(){
   const lbl=document.getElementById('sync-label');
   if(lbl){
@@ -426,7 +429,7 @@ function showSyncFlash(){
     setTimeout(()=>{ lbl.textContent=prev; lbl.style.color=''; },1200);
   }
 }
-
+ 
 function rerenderActiveView(){
   const cv=document.querySelector('.view.active');
   if(!cv) return;
@@ -438,9 +441,9 @@ function rerenderActiveView(){
     if(noProgress) renderOperator();
   }
 }
-
+ 
 setInterval(()=>{ rolloverWeekIfNeeded(); fetchFromSheet(); }, POLL_INTERVAL);
-
+ 
 // ════════════════════════════════════════════
 // POP-UP DE DÉMARRAGE — maintenance premier niveau
 // ════════════════════════════════════════════
@@ -463,7 +466,7 @@ function closeStartup(goToOperator){
   document.getElementById('startup-modal').classList.remove('open');
   if(goToOperator) nav('operator');
 }
-
+ 
 // ════════════════════════════════════════════
 // SCAN DOUCHETTE — capture clavier globale (code-barres = ID machine)
 // ════════════════════════════════════════════
@@ -533,7 +536,7 @@ function flashScanResult(ok, label){
   lbl.style.color = ok ? 'var(--green)' : 'var(--red)';
   setTimeout(()=>{ lbl.textContent=prevText; lbl.style.color=prevColor; },1600);
 }
-
+ 
 // ════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════
@@ -546,9 +549,9 @@ function nav(v){
   else if(v==='dashboard') renderDashboard();
   else renderAdmin();
 }
-
+ 
 function getParam(k){ return new URLSearchParams(window.location.search).get(k); }
-
+ 
 // ════════════════════════════════════════════
 // VUE OPÉRATEUR
 // ════════════════════════════════════════════
@@ -560,11 +563,11 @@ let opState = {
   startTime: null,
   lastDuration: null
 };
-
+ 
 function getCat(id){ const m=APP.machines.find(x=>x.id===id); return m?m.cat:null; }
 function getMachineName(id){ const m=APP.machines.find(x=>x.id===id); return m?m.name:id; }
 function getRecord(id){ return APP.weekRecords[id]||null; }
-
+ 
 // ════════════════════════════════════════════
 // CHRONOMÈTRE — visible pendant le remplissage de la TPM
 // ════════════════════════════════════════════
@@ -586,10 +589,10 @@ function startChronoIfNeeded(){
     updateChronoDisplay();
   }
 }
-
+ 
 function renderOperator(){
   const c = document.getElementById('op-content');
-
+ 
   if(!initialSyncDone){
     if(initialSyncError){
       c.innerHTML = `
@@ -614,7 +617,7 @@ function renderOperator(){
     <style>@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>`;
     return;
   }
-
+ 
   if(opState.submitted){
     const hasIssue = Object.values(opState.answers).some(a=>a==='ko');
     c.innerHTML = `
@@ -630,7 +633,7 @@ function renderOperator(){
     </div>`;
     return;
   }
-
+ 
   const cat = getCat(opState.machineId);
   const ops = cat ? (APP.operators[cat]||[]) : [];
   const questions = cat ? (APP.questions[cat]||[]) : [];
@@ -639,32 +642,32 @@ function renderOperator(){
   const existing = opState.machineId ? getRecord(opState.machineId) : null;
   const urgent = isUrgentPeriod();
   const pendingCount = pendingMachinesThisWeek().length;
-
+ 
   let html = `
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
     <div class="section-title">Contrôle TPM</div>
     <span class="badge badge-gray">Semaine du ${weekLabel(APP.weekKey)}</span>
   </div>
   <div class="section-sub">Scannez le code-barres du poste ou sélectionnez la machine</div>
-
+ 
   <div class="scan-banner">
     <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><line x1="6" y1="6" x2="6" y2="18"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="13" y1="6" x2="13" y2="18"/><line x1="16" y1="6" x2="16" y2="18"/><line x1="19" y1="6" x2="19" y2="18"/></svg>
     <span>Prêt à scanner — la machine se sélectionne automatiquement dès le scan du code-barres</span>
   </div>
-
+ 
   <div id="scan-debug" class="card" style="display:none;border:1px solid var(--border2)"></div>
-
+ 
   ${urgent && pendingCount>0 ? `<div class="warn-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span><strong>Dépêchez-vous !</strong> ${pendingCount} machine${pendingCount>1?'s':''} restent à contrôler avant la fin de la semaine (reset dimanche soir).</span>
   </div>`:''}
-
+ 
   ${!isOnline?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Connexion à Google Sheets indisponible — vérifie ta connexion</span></div>`:''}
-
+ 
   ${existing?`<div class="info-banner">
     TPM déjà faite cette semaine par <strong>${existing.operator}</strong> le ${existing.date} à ${existing.time}
   </div>`:''}
-
+ 
   <div class="card">
     <label class="lbl">Machine</label>
     <select onchange="selectMachine(this.value)">
@@ -678,7 +681,7 @@ function renderOperator(){
     </select>
     ${cat?`<div class="hint">Opérateurs habilités <strong>${cat}</strong> uniquement</div>`:''}
   </div>`;
-
+ 
   if(opState.operatorName && questions.length>0){
     html += `
     <div class="machine-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
@@ -714,11 +717,11 @@ function renderOperator(){
     </button>
     ${!allDone?`<div style="text-align:center;font-size:14px;color:var(--gray);margin-top:9px">Répondez à tous les points pour valider</div>`:''}`;
   }
-
+ 
   c.innerHTML = html;
   startChronoIfNeeded();
 }
-
+ 
 function selectMachine(id, fromScan){
   opState.machineId=id; opState.operatorName=''; opState.answers={};
   opState.startTime = id ? Date.now() : null; // démarrage du chronomètre (mesuré, non affiché)
@@ -726,7 +729,7 @@ function selectMachine(id, fromScan){
   renderOperator();
 }
 function selectOp(name){ opState.operatorName=name; renderOperator(); }
-
+ 
 function setAns(i, val){
   opState.answers[i]=val;
   const questions=APP.questions[getCat(opState.machineId)]||[];
@@ -745,7 +748,7 @@ function setAns(i, val){
   const lbl=document.querySelector('.progress-label');
   if(lbl) lbl.textContent=`${Object.keys(opState.answers).length}/${questions.length} points renseignés`;
 }
-
+ 
 function submitTPM(){
   const cat=getCat(opState.machineId);
   const questions=APP.questions[cat]||[];
@@ -770,12 +773,12 @@ function submitTPM(){
   stopChrono();
   renderOperator();
 }
-
+ 
 function resetOp(){
   opState={machineId:getParam('machine')||'',operatorName:'',answers:{},submitted:false,startTime:null,lastDuration:null};
   renderOperator();
 }
-
+ 
 // ════════════════════════════════════════════
 // VUE TABLEAU DE BORD
 // ════════════════════════════════════════════
@@ -788,7 +791,7 @@ function renderDashboard(){
   const now=nowTime();
   const urgent=isUrgentPeriod();
   const pending=machines.filter(m=>!records[m.id]);
-
+ 
   let html=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
     <div class="section-title">Tableau de bord</div>
@@ -798,18 +801,18 @@ function renderDashboard(){
     </div>
   </div>
   <div class="section-sub">État TPM — semaine du ${weekLabel(APP.weekKey)}</div>
-
+ 
   ${urgent && pending.length>0 ? `<div class="warn-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span><strong>Dépêchez-vous !</strong> ${pending.length} machine${pending.length>1?'s':''} encore non contrôlée${pending.length>1?'s':''} avant le reset de dimanche soir : ${pending.map(m=>m.name).join(' · ')}</span>
   </div>`:''}
-
+ 
   ${issues>0?`<div class="alert-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     <div><strong>${issues} anomalie${issues>1?'s':''} signalée${issues>1?'s':''}</strong><br>
     ${machines.filter(m=>records[m.id]&&records[m.id].anomaly).map(m=>`${m.name}`).join(' · ')}</div>
   </div>`:''}
-
+ 
   <div class="stats-row">
     <div class="stat-card"><div class="stat-num" style="color:var(--green)">${done}</div><div class="stat-lbl">Validées</div></div>
     <div class="stat-card"><div class="stat-num" style="color:var(--gray)">${machines.length-done}</div><div class="stat-lbl">En attente</div></div>
@@ -819,7 +822,7 @@ function renderDashboard(){
       <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${pct}%"></div></div>
     </div>
   </div>
-
+ 
   <div class="machine-grid">
     ${machines.map(m=>{
       const r=records[m.id];
@@ -833,7 +836,7 @@ function renderDashboard(){
       </div>`;
     }).join('')}
   </div>
-
+ 
   ${done>0?`<div class="card">
     <div class="card-title">Récapitulatif de la semaine</div>
     <table class="tbl">
@@ -852,16 +855,16 @@ function renderDashboard(){
   </div>`:`<div style="text-align:center;padding:28px 20px;color:var(--gray);font-size:13px">
     Aucune TPM validée pour l'instant cette semaine.
   </div>`}`;
-
+ 
   c.innerHTML=html;
 }
-
+ 
 // ════════════════════════════════════════════
 // VUE ADMIN
 // ════════════════════════════════════════════
 let adminState={locked:true,pass:'',addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined};
 const ADMIN_CODE='1234';
-
+ 
 function renderAdmin(){
   const c=document.getElementById('admin-content');
   if(adminState.locked){
@@ -882,14 +885,14 @@ function renderAdmin(){
   const cats=Object.keys(APP.questions);
   const urgent=isUrgentPeriod();
   const pending=APP.machines.filter(m=>!APP.weekRecords[m.id]);
-
+ 
   c.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
     <div class="section-title">Administration</div>
     <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
   </div>
   <div class="section-sub">Gestion des machines, codes-barres et suivi hebdomadaire — semaine du ${weekLabel(APP.weekKey)}</div>
-
+ 
   <div class="card" style="border-color:rgba(245,197,24,.35)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="card-title" style="margin-bottom:0">Codes-barres — un par machine, à coller sur le poste</div>
@@ -898,11 +901,11 @@ function renderAdmin(){
     <div id="qr-thumb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px"></div>
     <div class="hint" style="margin-top:12px">Touchez un code-barres pour l'agrandir et le télécharger individuellement. Un scan à la douchette sélectionne directement cette machine.</div>
   </div>
-
+ 
   ${pending.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
     ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
   </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
-
+ 
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait</div>
     <table class="tbl">
@@ -924,7 +927,7 @@ function renderAdmin(){
       </tbody>
     </table>
   </div>
-
+ 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
@@ -950,7 +953,7 @@ function renderAdmin(){
     </table>
     <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
   </div>
-
+ 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="card-title" style="margin-bottom:0">Parc machine (${APP.machines.length})</div>
@@ -981,7 +984,7 @@ function renderAdmin(){
       </tbody>
     </table>
   </div>
-
+ 
   <div class="card">
     <div class="card-title">Questions de contrôle</div>
     ${cats.map(cat=>`
@@ -997,7 +1000,7 @@ function renderAdmin(){
       </div>`).join('')}
     </div>`).join('')}
   </div>
-
+ 
   <div class="card">
     <div class="card-title">Opérateurs (prénoms)</div>
     ${cats.map(cat=>`
@@ -1014,7 +1017,7 @@ function renderAdmin(){
       ${(APP.operators[cat]||[]).length===0?`<div style="font-size:12px;color:var(--gray2);padding:7px 0">Aucun opérateur pour cette catégorie</div>`:''}
     </div>`).join('')}
   </div>
-
+ 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${adminState.showArchive?'14px':'0'}">
       <div class="card-title" style="margin-bottom:0">Archives — historique par semaine (rien n'est supprimé)</div>
@@ -1024,7 +1027,7 @@ function renderAdmin(){
   </div>`;
   renderBCThumbGrid();
 }
-
+ 
 // Regroupe l'historique par semaine (la plus récente en premier)
 function renderArchiveByWeek(){
   if(APP.history.length===0){
@@ -1077,7 +1080,7 @@ function toggleWeekGroup(wk){
   adminState.expandedWeek = (adminState.expandedWeek===wk) ? null : wk;
   renderAdmin();
 }
-
+ 
 function tryAdmin(){
   const input=document.getElementById('admin-pass');
   const val=input?input.value:adminState.pass;
@@ -1128,7 +1131,7 @@ function removeOperator(cat,i){
     syncedWrite(()=>{ APP.operators[cat].splice(i,1); }).then(renderAdmin);
   }
 }
-
+ 
 // ════════════════════════════════════════════
 // SUPPRESSION / RÉAFFECTATION DE MACHINES
 // ════════════════════════════════════════════
@@ -1147,7 +1150,7 @@ function changeMachineCat(id,newCat){
     if(m) m.cat=newCat;
   }).then(renderAdmin);
 }
-
+ 
 // ════════════════════════════════════════════
 // GESTION DES FAMILLES DE MACHINES (CATÉGORIES)
 // ════════════════════════════════════════════
@@ -1189,7 +1192,7 @@ function deleteCategory(cat){
     }
   }).then(renderAdmin);
 }
-
+ 
 // ════════════════════════════════════════════
 // CODE-BARRES — un code-barres CODE128 par machine (encode l'ID machine)
 // ════════════════════════════════════════════
@@ -1225,7 +1228,7 @@ function downloadBC(){
   a.click();
   a.remove();
 }
-
+ 
 // Miniatures de tous les codes-barres, affichées directement dans l'écran Admin
 function renderBCThumbGrid(){
   const grid=document.getElementById('qr-thumb-grid');
@@ -1242,7 +1245,7 @@ function renderBCThumbGrid(){
     }catch(e){}
   });
 }
-
+ 
 // Imprime tous les codes-barres d'un coup, prêts à découper et plastifier
 function printAllBC(){
   if(!APP.machines.length){ alert('Aucune machine à imprimer'); return; }
@@ -1270,11 +1273,11 @@ function printAllBC(){
   w.document.close();
   setTimeout(()=>{ w.focus(); w.print(); }, 400);
 }
-
+ 
 function closeBC(){document.getElementById('bc-modal').classList.remove('open');}
 document.getElementById('bc-modal').addEventListener('click',function(e){if(e.target===this)closeBC();});
 document.getElementById('startup-modal').addEventListener('click',function(e){if(e.target===this)closeStartup(false);});
-
+ 
 // ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
@@ -1290,3 +1293,4 @@ if(getParam('machine')){
 </script>
 </body>
 </html>
+ 
