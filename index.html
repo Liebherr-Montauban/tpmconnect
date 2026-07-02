@@ -927,8 +927,34 @@ function renderAdmin(){
 
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
+      <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${cats.map(cat=>{
+          const count=APP.machines.filter(m=>m.cat===cat).length;
+          return `<tr>
+            <td style="font-weight:600">${cat}</td>
+            <td>${count}</td>
+            <td style="color:var(--gray)">${(APP.questions[cat]||[]).length}</td>
+            <td style="color:var(--gray)">${(APP.operators[cat]||[]).length}</td>
+            <td style="display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="renameCategory('${cat}')">Renommer</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat}')" ${count>0?'disabled title="Réassignez ou supprimez d\'abord les machines de cette famille"':''}>Supprimer</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="card-title" style="margin-bottom:0">Parc machine (${APP.machines.length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="toggleAddMachine()">+ Ajouter</button>
+      <button class="btn btn-secondary btn-sm" onclick="toggleAddMachine()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter</button>
     </div>
     ${adminState.addingMachine?`
     <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
@@ -941,14 +967,15 @@ function renderAdmin(){
       <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + Code-barres</button>
     </div>`:''}
     <table class="tbl">
-      <thead><tr><th>Machine</th><th>ID / Code</th><th>Catégorie</th><th>Code-barres</th></tr></thead>
+      <thead><tr><th>Machine</th><th>ID / Code</th><th>Catégorie</th><th>Code-barres</th><th>Actions</th></tr></thead>
       <tbody>
         ${APP.machines.map(m=>{
           return `<tr>
-            <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
+            <td style="font-weight:600">${m.name}</td>
             <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${m.id}</td>
-            <td><span class="badge badge-yellow">${m.cat}</span></td>
+            <td><select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;padding:7px 10px;font-size:13px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select></td>
             <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Voir / Imprimer</button></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteMachine('${m.id}')">Supprimer</button></td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -1063,7 +1090,9 @@ function toggleArchive(){adminState.showArchive=!adminState.showArchive;renderAd
 function addMachine(){
   const name=document.getElementById('new-mname')?.value||adminState.newName;
   if(!name.trim()){alert('Entrez un nom');return;}
-  const cat=adminState.newCat;
+  const cats=Object.keys(APP.questions);
+  if(cats.length===0){alert('Créez d\'abord une famille de machines.');return;}
+  const cat=cats.includes(adminState.newCat)?adminState.newCat:cats[0];
   adminState.newName='';adminState.addingMachine=false;
   renderAdmin();
   let id;
@@ -1098,6 +1127,67 @@ function removeOperator(cat,i){
   if(confirm('Supprimer cet opérateur ?')){
     syncedWrite(()=>{ APP.operators[cat].splice(i,1); }).then(renderAdmin);
   }
+}
+
+// ════════════════════════════════════════════
+// SUPPRESSION / RÉAFFECTATION DE MACHINES
+// ════════════════════════════════════════════
+function deleteMachine(id){
+  const m=APP.machines.find(x=>x.id===id);
+  if(!m) return;
+  if(!confirm(`Supprimer définitivement "${m.name}" ? L'historique déjà archivé de cette machine sera conservé, mais elle disparaîtra du parc et du suivi de la semaine.`)) return;
+  syncedWrite(()=>{
+    APP.machines=APP.machines.filter(x=>x.id!==id);
+    delete APP.weekRecords[id];
+  }).then(renderAdmin);
+}
+function changeMachineCat(id,newCat){
+  syncedWrite(()=>{
+    const m=APP.machines.find(x=>x.id===id);
+    if(m) m.cat=newCat;
+  }).then(renderAdmin);
+}
+
+// ════════════════════════════════════════════
+// GESTION DES FAMILLES DE MACHINES (CATÉGORIES)
+// ════════════════════════════════════════════
+function addCategory(){
+  const name=prompt('Nom de la nouvelle famille de machines (ex: Perçage) :');
+  if(!name||!name.trim()) return;
+  const clean=name.trim();
+  if(APP.questions[clean]||APP.operators[clean]){ alert('Cette famille existe déjà.'); return; }
+  syncedWrite(()=>{
+    APP.questions[clean]=[];
+    APP.operators[clean]=[];
+  }).then(renderAdmin);
+}
+function renameCategory(oldCat){
+  const name=prompt(`Renommer la famille "${oldCat}" en :`, oldCat);
+  if(!name||!name.trim()) return;
+  const clean=name.trim();
+  if(clean===oldCat) return;
+  if(APP.questions[clean]||APP.operators[clean]){ alert('Une famille porte déjà ce nom.'); return; }
+  syncedWrite(()=>{
+    APP.questions[clean]=APP.questions[oldCat]||[];
+    APP.operators[clean]=APP.operators[oldCat]||[];
+    delete APP.questions[oldCat];
+    delete APP.operators[oldCat];
+    APP.machines.forEach(m=>{ if(m.cat===oldCat) m.cat=clean; });
+    if(adminState.newCat===oldCat) adminState.newCat=clean;
+  }).then(renderAdmin);
+}
+function deleteCategory(cat){
+  const inUse=APP.machines.some(m=>m.cat===cat);
+  if(inUse){ alert('Impossible : des machines sont encore rattachées à cette famille. Réassignez-les ou supprimez-les d\'abord.'); return; }
+  if(!confirm(`Supprimer la famille "${cat}" et ses questions/opérateurs associés ?`)) return;
+  syncedWrite(()=>{
+    delete APP.questions[cat];
+    delete APP.operators[cat];
+    if(adminState.newCat===cat){
+      const remaining=Object.keys(APP.questions);
+      adminState.newCat=remaining[0]||'';
+    }
+  }).then(renderAdmin);
 }
 
 // ════════════════════════════════════════════
