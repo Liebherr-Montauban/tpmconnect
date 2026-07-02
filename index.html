@@ -244,6 +244,10 @@ option{background:var(--bg3)}
 // ════════════════════════════════════════════
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
+// URL du dossier où sont déposés les PDF de fiches d'instruction.
+// Laisse '' pour utiliser le dossier de cette page (par défaut). Si tes liens donnent une 404,
+// remplis ici l'URL complète du dossier (avec / à la fin), ex: 'https://monsite.com/fiches/'
+const PDF_FOLDER_URL = '';
  
 // ════════════════════════════════════════════
 // GESTION SEMAINE (réinitialisation dimanche soir / minuit -> lundi)
@@ -602,10 +606,18 @@ function getRecord(id){ return APP.weekRecords[id]||null; }
 function getInstructionSheet(machineId){
   return (APP.instructionSheets && APP.instructionSheets[machineId]) || null;
 }
+function instructionSheetUrl(fileName){
+  if(PDF_FOLDER_URL){
+    return PDF_FOLDER_URL.replace(/\/+$/,'') + '/' + encodeURIComponent(fileName);
+  }
+  return encodeURI(fileName);
+}
 function viewInstructionSheet(machineId){
   const sheet = getInstructionSheet(machineId);
   if(!sheet || !sheet.fileName){ alert('Fiche introuvable.'); return; }
-  window.open(encodeURI(sheet.fileName), '_blank');
+  const url = instructionSheetUrl(sheet.fileName);
+  const win = window.open(url, '_blank');
+  if(!win){ alert("Le navigateur a peut-être bloqué l'ouverture. Autorise les pop-ups pour ce site, ou vérifie l'URL : "+url); }
 }
 function setInstructionSheet(machineId){
   const input=document.getElementById('instr-file-input');
@@ -1150,9 +1162,9 @@ function renderAdmin(){
             <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${m.id}</td>
             <td><select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;padding:7px 10px;font-size:13px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select></td>
             <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Voir / Imprimer</button></td>
-            <td>${sheet?`
-              <div style="display:flex;flex-direction:column;gap:6px;min-width:170px">
-                <span class="badge badge-green" style="width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${sheet.fileName}</span>
+            <td style="max-width:220px">${sheet?`
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span class="badge badge-green" style="width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">📄 ${sheet.fileName}</span>
                 <div style="display:flex;gap:5px;flex-wrap:wrap">
                   <button class="btn btn-secondary btn-sm" onclick="viewInstructionSheet('${m.id}')">Voir</button>
                   <button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">Modifier</button>
