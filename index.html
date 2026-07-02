@@ -310,7 +310,7 @@ function defaultData(){
     history:[],       // archive complète, jamais supprimée
     weekKey: currentWeekKey(),
     weekRecords:{},    // { machineId: record } pour la semaine en cours
-    instructionSheets:{} // { machineId: {fileName, data (base64 PDF), uploadedAt, sizeKB} }
+    instructionSheets:{} // { machineId: {fileName, addedAt} } — le PDF lui-même vit à côté du fichier HTML
   };
 }
  
@@ -595,34 +595,19 @@ function getMachineName(id){ const m=APP.machines.find(x=>x.id===id); return m?m
 function getRecord(id){ return APP.weekRecords[id]||null; }
  
 // ════════════════════════════════════════════
-// FICHES D'INSTRUCTION — PDF par machine (import Admin, base64 dans le Sheet)
+// FICHES D'INSTRUCTION — PDF par machine (référence par nom de fichier)
+// Le PDF est déposé manuellement dans le MÊME DOSSIER que cette page HTML.
+// Seul le nom du fichier est stocké dans le Sheet (texte court, aucun souci de taille).
 // ════════════════════════════════════════════
-const MAX_INSTR_BYTES = 2*1024*1024; // 2 Mo — au-delà, avertissement fort (risque cellule Google Sheets)
 function getInstructionSheet(machineId){
   return (APP.instructionSheets && APP.instructionSheets[machineId]) || null;
 }
-function dataURLtoBlob(dataurl){
-  const arr = dataurl.split(',');
-  const mimeMatch = arr[0].match(/:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
-  return new Blob([u8arr], {type:mime});
-}
 function viewInstructionSheet(machineId){
   const sheet = getInstructionSheet(machineId);
-  if(!sheet || !sheet.data){ alert('Fiche introuvable.'); return; }
-  try{
-    const blob = dataURLtoBlob(sheet.data);
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-  }catch(e){
-    alert("Impossible d'ouvrir la fiche PDF.");
-  }
+  if(!sheet || !sheet.fileName){ alert('Fiche introuvable.'); return; }
+  window.open(encodeURI(sheet.fileName), '_blank');
 }
-function triggerInstructionUpload(machineId){
+function setInstructionSheet(machineId){
   const input=document.getElementById('instr-file-input');
   if(!input) return;
   input.dataset.machineId=machineId;
@@ -634,34 +619,17 @@ function onInstructionFileSelected(inputEl){
   const file=inputEl.files && inputEl.files[0];
   if(!machineId || !file) return;
   const isPdf = file.type==='application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  if(!isPdf){ alert('Seuls les fichiers PDF sont acceptés.'); return; }
-  if(file.size > MAX_INSTR_BYTES){
-    alert(`Fichier trop volumineux (${(file.size/1024/1024).toFixed(1)} Mo). Limite conseillée : ${(MAX_INSTR_BYTES/1024/1024).toFixed(0)} Mo. Compressez le PDF avant import — au-delà, la synchro Google Sheets peut échouer.`);
-    return;
-  }
-  if(file.size > 200*1024){
-    if(!confirm(`Ce PDF fait ${(file.size/1024).toFixed(0)} Ko. Selon la configuration de ton Google Sheet, un fichier de cette taille peut dépasser la limite d'une cellule et empêcher la synchro. Continuer quand même ?`)) return;
-  }
-  const reader=new FileReader();
-  reader.onload=function(){
-    const dataUrl=reader.result;
-    syncedWrite(()=>{
-      if(!APP.instructionSheets) APP.instructionSheets={};
-      APP.instructionSheets[machineId]={
-        fileName:file.name,
-        data:dataUrl,
-        uploadedAt: today()+' '+nowTime(),
-        sizeKB: Math.round(file.size/1024)
-      };
-    }).then(()=>{ renderAdmin(); });
-  };
-  reader.onerror=function(){ alert('Erreur de lecture du fichier.'); };
-  reader.readAsDataURL(file);
+  if(!isPdf){ alert('Choisis un fichier PDF.'); return; }
+  // On ne lit QUE le nom du fichier, jamais son contenu — rien n'est envoyé/stocké dans le Sheet à part ce texte.
+  syncedWrite(()=>{
+    if(!APP.instructionSheets) APP.instructionSheets={};
+    APP.instructionSheets[machineId]={ fileName:file.name, addedAt: today()+' '+nowTime() };
+  }).then(renderAdmin);
 }
 function deleteInstructionSheet(machineId){
   const sheet=getInstructionSheet(machineId);
   if(!sheet) return;
-  if(!confirm(`Supprimer la fiche d'instruction "${sheet.fileName}" de cette machine ?`)) return;
+  if(!confirm(`Retirer le lien vers "${sheet.fileName}" pour cette machine ? (le fichier PDF lui-même n'est pas supprimé du dossier)`)) return;
   syncedWrite(()=>{
     if(APP.instructionSheets) delete APP.instructionSheets[machineId];
   }).then(renderAdmin);
@@ -779,7 +747,7 @@ function renderOperator(){
         <div style="font-size:13px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Fiche d'instruction</div>
         <div style="font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${instrSheet.fileName}</div>
       </div>
-      <button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="viewInstructionSheet('${opState.machineId}')">📄 Voir le PDF</button>
+      <button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="viewInstructionSheet('${opState.machineId}')">📄 Voir la fiche</button>
     </div>`:''}
     <label class="lbl" style="margin-top:12px">Votre nom ${!opState.machineId?'<span style="color:var(--gray2);font-weight:400">(choisir machine d\'abord)</span>':''}</label>
     <select id="op-name-select" onchange="selectOp(this.value)" ${!opState.machineId?'disabled':''}>
@@ -1183,21 +1151,21 @@ function renderAdmin(){
             <td><select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;padding:7px 10px;font-size:13px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select></td>
             <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Voir / Imprimer</button></td>
             <td>${sheet?`
-              <div style="display:flex;flex-direction:column;gap:6px;min-width:150px">
-                <span class="badge badge-green" style="width:fit-content">📄 ${sheet.sizeKB} Ko</span>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:170px">
+                <span class="badge badge-green" style="width:fit-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${sheet.fileName}</span>
                 <div style="display:flex;gap:5px;flex-wrap:wrap">
                   <button class="btn btn-secondary btn-sm" onclick="viewInstructionSheet('${m.id}')">Voir</button>
-                  <button class="btn btn-secondary btn-sm" onclick="triggerInstructionUpload('${m.id}')">Remplacer</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteInstructionSheet('${m.id}')">Suppr.</button>
+                  <button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">Modifier</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteInstructionSheet('${m.id}')">Retirer</button>
                 </div>
               </div>
-            `:`<button class="btn btn-secondary btn-sm" onclick="triggerInstructionUpload('${m.id}')">+ Importer PDF</button>`}</td>
+            `:`<button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">+ Lier un PDF</button>`}</td>
             <td><button class="btn btn-danger btn-sm" onclick="deleteMachine('${m.id}')">Supprimer</button></td>
           </tr>`;
         }).join('')}
       </tbody>
     </table>
-    <div class="hint" style="margin-top:12px">Fiches PDF importées directement dans le Google Sheet (base64). Limite conseillée : quelques centaines de Ko — au-delà, la synchro peut échouer selon la configuration du Sheet.</div>
+    <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans le Sheet : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
   </div>
  
   <div class="card">
@@ -1511,7 +1479,7 @@ if(getParam('machine')){
 }
 </script>
 
-<!-- Input caché pour l'import de fiches d'instruction PDF (Admin uniquement) -->
+<!-- Sélecteur de fichier pour choisir le PDF (Admin) — seul le NOM du fichier est utilisé, jamais son contenu -->
 <input type="file" id="instr-file-input" accept="application/pdf,.pdf" style="display:none" onchange="onInstructionFileSelected(this)">
 </body>
 </html>
