@@ -217,7 +217,7 @@ option{background:var(--bg3)}
     </div>
     <div style="font-size:14px;color:var(--gray);margin-bottom:12px">Plastifiez et collez sur le poste — un scan avec la douchette ouvre directement cette machine</div>
     <div style="display:flex;gap:7px">
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="downloadBC()">⬇ Télécharger</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="downloadBC()">Télécharger</button>
       <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeBC()">Fermer</button>
     </div>
   </div>
@@ -281,8 +281,8 @@ function fmtDuration(sec){
 }
 
 // Icône par catégorie de machine — repère visuel rapide sur poste industriel
-const CAT_ICON = { 'Presse':'🛠️', 'Fraisage':'⚙️', 'Tournage':'🔩', 'Ligne':'🏭' };
-function catIcon(cat){ return CAT_ICON[cat] || '🔧'; }
+const CAT_ICON = { 'Presse':'', 'Fraisage':'', 'Tournage':'', 'Ligne':'' };
+function catIcon(cat){ return CAT_ICON[cat] || ''; }
 
 function defaultData(){
   return {
@@ -421,7 +421,7 @@ function showSyncFlash(){
   const lbl=document.getElementById('sync-label');
   if(lbl){
     const prev=lbl.textContent;
-    lbl.textContent='↻ Mis à jour';
+    lbl.textContent='Mis à jour';
     lbl.style.color='var(--yellow)';
     setTimeout(()=>{ lbl.textContent=prev; lbl.style.color=''; },1200);
   }
@@ -519,17 +519,17 @@ function showScanDebug(raw, parsed, matched){
   box.style.display='block';
   box.style.borderColor = matched ? 'rgba(34,197,94,.4)' : 'rgba(232,64,64,.4)';
   box.innerHTML = `
-    <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔍 Dernier scan reçu</div>
+    <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Dernier scan reçu</div>
     <div style="font-family:var(--font-mono);font-size:18px;color:${matched?'var(--green)':'var(--red)'};word-break:break-all">"${raw}"</div>
     <div style="font-size:13px;color:var(--gray);margin-top:6px">Code interprété : <span class="mono" style="color:var(--text)">${parsed}</span> (${raw.length} caractère${raw.length>1?'s':''})</div>
-    <div style="font-size:13px;color:var(--gray);margin-top:4px">${matched?'✓ Correspond à une machine':'✗ Ne correspond à aucun ID connu. IDs existants : '+idsList}</div>
+    <div style="font-size:13px;color:var(--gray);margin-top:4px">${matched?'Correspond à une machine':'Ne correspond à aucun ID connu. IDs existants : '+idsList}</div>
   `;
 }
 function flashScanResult(ok, label){
   const lbl=document.getElementById('sync-label');
   if(!lbl) return;
   const prevColor=lbl.style.color, prevText=lbl.textContent;
-  lbl.textContent = ok ? '✓ Scan : '+label : '✗ Code inconnu';
+  lbl.textContent = ok ? 'Scan : '+label : 'Code inconnu';
   lbl.style.color = ok ? 'var(--green)' : 'var(--red)';
   setTimeout(()=>{ lbl.textContent=prevText; lbl.style.color=prevColor; },1600);
 }
@@ -624,7 +624,7 @@ function renderOperator(){
       <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">${getMachineName(opState.machineId)} — ${nowTime()}</div>
       ${hasIssue?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><strong>Anomalie signalée</strong> — alerte envoyée à la maintenance</span></div>`:''}
       <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:13px;font-size:12px;color:#4ade80;margin-bottom:18px">
-        ✓ Fiche enregistrée sur Google Sheets — visible partout
+        Fiche enregistrée sur Google Sheets — visible partout
       </div>
       <button class="btn btn-secondary" onclick="resetOp()">Nouvelle saisie</button>
     </div>`;
@@ -662,7 +662,7 @@ function renderOperator(){
   ${!isOnline?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Connexion à Google Sheets indisponible — vérifie ta connexion</span></div>`:''}
 
   ${existing?`<div class="info-banner">
-    ✓ TPM déjà faite cette semaine par <strong>${existing.operator}</strong> le ${existing.date} à ${existing.time}
+    TPM déjà faite cette semaine par <strong>${existing.operator}</strong> le ${existing.date} à ${existing.time}
   </div>`:''}
 
   <div class="card">
@@ -676,7 +676,7 @@ function renderOperator(){
       <option value="">— Sélectionner votre nom —</option>
       ${ops.map(o=>`<option value="${o}" ${opState.operatorName===o?'selected':''}>${o}</option>`).join('')}
     </select>
-    ${cat?`<div class="hint">✓ Opérateurs habilités <strong>${cat}</strong> uniquement</div>`:''}
+    ${cat?`<div class="hint">Opérateurs habilités <strong>${cat}</strong> uniquement</div>`:''}
   </div>`;
 
   if(opState.operatorName && questions.length>0){
@@ -688,7 +688,7 @@ function renderOperator(){
         <p>Opérateur : ${opState.operatorName}</p>
       </div>
       <div style="text-align:center;flex-shrink:0;background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:12px 18px">
-        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">⏱ Chrono</div>
+        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Chrono</div>
         <div id="chrono-display" style="font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--yellow)">00:00</div>
       </div>
     </div>
@@ -699,8 +699,8 @@ function renderOperator(){
         return `<div class="check-row">
           <span class="check-q">${q}</span>
           <div class="radio-pair">
-            <button class="radio-btn ${ans==='ok'?'ok-active':''}" onclick="setAns(${i},'ok')">✓ OK</button>
-            <button class="radio-btn ${ans==='ko'?'ko-active':''}" onclick="setAns(${i},'ko')">⚠ Pb</button>
+            <button class="radio-btn ${ans==='ok'?'ok-active':''}" onclick="setAns(${i},'ok')">OK</button>
+            <button class="radio-btn ${ans==='ko'?'ko-active':''}" onclick="setAns(${i},'ko')">Pb</button>
           </div>
         </div>`;
       }).join('')}
@@ -811,10 +811,9 @@ function renderDashboard(){
   </div>`:''}
 
   <div class="stats-row">
-    <div class="stat-card"><div style="font-size:18px;margin-bottom:2px">✅</div><div class="stat-num" style="color:var(--green)">${done}</div><div class="stat-lbl">Validées</div></div>
-    <div class="stat-card"><div style="font-size:18px;margin-bottom:2px">⏳</div><div class="stat-num" style="color:var(--gray)">${machines.length-done}</div><div class="stat-lbl">En attente</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${done}</div><div class="stat-lbl">Validées</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gray)">${machines.length-done}</div><div class="stat-lbl">En attente</div></div>
     <div class="stat-card">
-      <div style="font-size:18px;margin-bottom:2px">📈</div>
       <div class="stat-num" style="color:var(--yellow)">${pct}%</div>
       <div class="stat-lbl">Avancement</div>
       <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -893,8 +892,8 @@ function renderAdmin(){
 
   <div class="card" style="border-color:rgba(245,197,24,.35)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="card-title" style="margin-bottom:0">▮▮▮ Codes-barres — un par machine, à coller sur le poste</div>
-      <button class="btn btn-primary btn-sm" onclick="printAllBC()">🖨️ Imprimer tous les codes-barres</button>
+      <div class="card-title" style="margin-bottom:0">Codes-barres — un par machine, à coller sur le poste</div>
+      <button class="btn btn-primary btn-sm" onclick="printAllBC()">Imprimer tous les codes-barres</button>
     </div>
     <div id="qr-thumb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px"></div>
     <div class="hint" style="margin-top:12px">Touchez un code-barres pour l'agrandir et le télécharger individuellement. Un scan à la douchette sélectionne directement cette machine.</div>
@@ -902,7 +901,7 @@ function renderAdmin(){
 
   ${pending.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
     ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
-  </div>`:`<div class="info-banner">✓ Toutes les machines ont été contrôlées cette semaine</div>`}
+  </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
 
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait</div>
@@ -912,8 +911,8 @@ function renderAdmin(){
         ${APP.machines.map(m=>{
           const r=APP.weekRecords[m.id];
           let statusCell;
-          if(r) statusCell = r.anomaly?`<span class="badge badge-red">⚠ Anomalie</span>`:`<span class="badge badge-green">✓ Fait</span>`;
-          else statusCell = urgent?`<span class="badge badge-orange">⏰ En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
+          if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
+          else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
           return `<tr>
             <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
             <td><span class="badge badge-yellow">${m.cat}</span></td>
@@ -949,7 +948,7 @@ function renderAdmin(){
             <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
             <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${m.id}</td>
             <td><span class="badge badge-yellow">${m.cat}</span></td>
-            <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">▮▮▮ Voir / Imprimer</button></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Voir / Imprimer</button></td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -1022,7 +1021,7 @@ function renderArchiveByWeek(){
     return `<div class="week-group">
       <div class="week-group-head" onclick="toggleWeekGroup('${wk}')">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span class="week-group-title">📅 Semaine du ${weekLabel(wk)}</span>
+          <span class="week-group-title">Semaine du ${weekLabel(wk)}</span>
           ${isCurrent?'<span class="badge badge-yellow">En cours</span>':''}
           <span class="badge badge-gray">${records.length} fiche${records.length>1?'s':''}</span>
           ${anomalies>0?`<span class="badge badge-red">${anomalies} anomalie${anomalies>1?'s':''}</span>`:''}
@@ -1107,7 +1106,7 @@ function removeOperator(cat,i){
 function showBC(machineId){
   const m=APP.machines.find(x=>x.id===machineId);
   if(!m) return;
-  document.getElementById('bc-modal-title').textContent=(CAT_ICON[m.cat]||'🔧')+' '+m.name;
+  document.getElementById('bc-modal-title').textContent=m.name;
   document.getElementById('bc-modal-sub').textContent=m.cat+' — '+m.id;
   const canvas=document.getElementById('bc-canvas');
   try{
