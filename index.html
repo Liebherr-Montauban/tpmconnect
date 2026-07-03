@@ -249,9 +249,11 @@ option{background:var(--bg3)}
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
 // URL du dossier où sont déposés les PDF de fiches d'instruction.
-// Laisse '' pour utiliser le dossier de cette page (par défaut). Si tes liens donnent une 404,
-// remplis ici l'URL complète du dossier (avec / à la fin), ex: 'https://monsite.com/fiches/'
-const PDF_FOLDER_URL = '';
+// Fixée en dur vers l'adresse complète du dépôt GitHub Pages, pour que les liens
+// fonctionnent même si le site est ouvert sans le "/" final (ex: un raccourci
+// pointant vers ".../tpmconnect" au lieu de ".../tpmconnect/"), ce qui causait
+// des erreurs 404 sur les PDF.
+const PDF_FOLDER_URL = 'https://romanexiberras-creator.github.io/tpmconnect/';
  
 // ════════════════════════════════════════════
 // GESTION SEMAINE (réinitialisation dimanche soir / minuit -> lundi)
