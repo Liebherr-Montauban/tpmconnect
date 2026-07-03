@@ -1,1597 +1,784 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>TPMConnect</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#F5C518">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TPMConnect">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#0a0a0a;
-  --bg2:#111111;
-  --bg3:#1a1a1a;
-  --bg4:#222222;
-  --yellow:#F5C518;
-  --yellow2:#FFD700;
-  --yellow-dim:#3d3000;
-  --red:#E84040;
-  --green:#22C55E;
-  --orange:#F59E0B;
-  --gray:#888;
-  --gray2:#555;
-  --border:#2a2a2a;
-  --border2:#333;
-  --text:#F0F0F0;
-  --stripe: repeating-linear-gradient(135deg, var(--yellow) 0 10px, #0a0a0a 10px 20px);
-  --font-head:'Oswald',-apple-system,sans-serif;
-  --font-mono:'JetBrains Mono',ui-monospace,monospace;
-}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:19px}
- 
-.hazard{height:7px;background:var(--stripe);background-size:34px 34px}
- 
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:74px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{color:#fff;font-family:var(--font-head);font-size:26px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
-.logo-dot{width:18px;height:18px;border-radius:4px;background:var(--stripe);background-size:10px 10px;flex-shrink:0}
-.logo span{color:var(--yellow)}
-.sync-indicator{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--gray)}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--gray2);flex-shrink:0;transition:background .3s}
-.sync-dot.live{background:var(--green);animation:blink 2s infinite}
-.sync-dot.error{background:var(--red)}
-.sync-dot.syncing{background:var(--yellow);animation:blink .6s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-.topbar-tabs{display:flex;gap:3px}
-.topbar-tab{background:transparent;border:none;color:var(--gray);font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s}
-.topbar-tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.topbar-tab.active{color:var(--yellow);background:rgba(245,197,24,.1)}
- 
-.view{display:none;padding:20px;max-width:820px;margin:0 auto;padding-bottom:60px}
-.view.active{display:block}
- 
-.card{background:var(--bg2);border-radius:16px;padding:22px;margin-bottom:14px;border:1px solid var(--border)}
-.card-title{font-family:var(--font-head);font-size:15px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
- 
-label.lbl{display:block;font-size:15px;font-weight:500;color:var(--gray);margin-bottom:6px;margin-top:14px}
-label.lbl:first-child{margin-top:0}
-select,input[type=text],input[type=password]{
-  width:100%;padding:15px 18px;border:1px solid var(--border2);border-radius:11px;
-  background:var(--bg3);color:var(--text);font-size:18px;appearance:none;
-  transition:border-color .15s
-}
-select:focus,input:focus{outline:none;border-color:var(--yellow)}
-select:disabled{background:var(--bg2);color:var(--gray2)}
-option{background:var(--bg3)}
- 
- 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:17px 24px;border-radius:11px;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;width:100%}
-.btn-primary{background:var(--yellow);color:#000}
-.btn-primary:hover{background:var(--yellow2)}
-.btn-primary:disabled{background:var(--gray2);color:#666;cursor:not-allowed}
-.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
-.btn-secondary:hover{border-color:var(--gray)}
-.btn-danger{background:rgba(232,64,64,.1);color:var(--red);border:1px solid rgba(232,64,64,.3)}
-.btn-sm{padding:10px 18px;font-size:14px;width:auto;border-radius:9px}
- 
-.machine-header{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
-.machine-header::before{content:'';position:absolute;top:0;left:0;right:0;height:7px;background:var(--stripe);background-size:28px 28px}
-.machine-header .cat-tag{display:inline-block;background:var(--yellow-dim);color:var(--yellow);font-size:13px;font-weight:700;padding:5px 13px;border-radius:20px;margin-bottom:9px;letter-spacing:.5px;text-transform:uppercase}
-.machine-header h2{font-family:var(--font-head);font-size:30px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;color:#fff}
-.machine-header p{color:var(--gray);font-size:16px}
- 
-.check-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border)}
-.check-row:last-child{border-bottom:none}
-.check-q{font-size:17px;flex:1;padding-right:14px;line-height:1.4;color:var(--text)}
-.radio-pair{display:flex;gap:8px;flex-shrink:0}
-.radio-btn{padding:10px 16px;border-radius:9px;border:1px solid var(--border2);font-size:16px;font-weight:600;cursor:pointer;background:var(--bg3);color:var(--gray);transition:all .15s}
-.radio-btn:hover{border-color:var(--gray)}
-.radio-btn.ok-active{background:rgba(34,197,94,.12);border-color:#22C55E;color:#22C55E}
-.radio-btn.ko-active{background:rgba(232,64,64,.12);border-color:var(--red);color:var(--red)}
- 
-.progress-wrap{margin-top:16px}
-.progress-bar{height:6px;background:var(--border2);border-radius:3px;overflow:hidden;margin-bottom:7px}
-.progress-fill{height:100%;background:var(--yellow);border-radius:3px;transition:width .3s}
-.progress-label{font-size:14px;color:var(--gray)}
- 
-.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:14px;font-weight:600}
-.badge-green{background:rgba(34,197,94,.12);color:#22C55E}
-.badge-red{background:rgba(232,64,64,.12);color:var(--red)}
-.badge-yellow{background:var(--yellow-dim);color:var(--yellow)}
-.badge-orange{background:rgba(245,158,11,.12);color:var(--orange)}
-.badge-gray{background:var(--bg3);color:var(--gray);border:1px solid var(--border2)}
- 
-.machine-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px}
-.machine-tile{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:17px;cursor:pointer;transition:all .2s}
-.machine-tile:hover{border-color:var(--border2)}
-.machine-tile.done{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
-.machine-tile.issue{border-color:rgba(232,64,64,.4);background:rgba(232,64,64,.04);animation:pulse 1.5s infinite}
-.machine-tile.urgent{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.05)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-.tile-name{font-size:17px;font-weight:600;margin-bottom:5px;color:#fff}
-.tile-info{font-size:14px;color:var(--gray);display:flex;align-items:center;gap:5px}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0}
-.dot-green{background:var(--green)}
-.dot-red{background:var(--red)}
-.dot-gray{background:var(--gray2)}
-.dot-orange{background:var(--orange)}
- 
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:14px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center}
-.stat-num{font-family:var(--font-mono);font-size:36px;font-weight:700;font-variant-numeric:tabular-nums}
-.stat-lbl{font-size:13px;color:var(--gray);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
- 
-.alert-banner{background:rgba(232,64,64,.08);border:1px solid rgba(232,64,64,.3);border-radius:13px;padding:16px 18px;margin-bottom:14px;font-size:16px;color:#f87171;display:flex;align-items:flex-start;gap:10px}
-.alert-banner svg{flex-shrink:0;margin-top:1px;width:18px;height:18px}
- 
-.warn-banner{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:13px;padding:16px 18px;margin-bottom:14px;font-size:16px;color:var(--orange);display:flex;align-items:flex-start;gap:10px}
-.warn-banner svg{flex-shrink:0;margin-top:1px;width:18px;height:18px}
- 
-.info-banner{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:12px;padding:14px 18px;font-size:16px;color:var(--yellow);margin-bottom:14px}
- 
-.scan-banner{background:rgba(34,197,94,.06);border:1px dashed rgba(34,197,94,.35);border-radius:13px;padding:18px;margin-bottom:14px;font-size:16px;color:#4ade80;display:flex;align-items:center;gap:12px}
-.scan-banner svg{flex-shrink:0;width:26px;height:26px}
- 
-.tbl{width:100%;border-collapse:collapse;font-size:16px}
-.tbl th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border2);font-weight:700;color:var(--gray);font-size:13px;text-transform:uppercase;letter-spacing:.6px;font-family:var(--font-head)}
-.tbl td{padding:13px 12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:var(--bg3)}
-.mono{font-family:var(--font-mono)}
-.tbl-fixed{table-layout:fixed}
-.tbl-fixed td{overflow:hidden}
-.cell-clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%}
-.cell-wrap{overflow-wrap:break-word;word-break:break-word}
- 
-.success-screen{text-align:center;padding:56px 26px}
-.success-icon{width:92px;height:92px;background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-.success-icon svg{width:44px;height:44px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
- 
-.lock-screen{display:flex;align-items:center;justify-content:center;min-height:60vh}
-.lock-box{width:100%;max-width:380px;text-align:center}
-.lock-icon{width:74px;height:74px;background:var(--yellow-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;border:1px solid rgba(245,197,24,.2)}
-.lock-icon svg{width:32px;height:32px;stroke:var(--yellow);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
- 
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.open{display:flex}
-.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center}
-.modal-box.wide{max-width:520px;text-align:left}
- 
-.section-title{font-family:var(--font-head);font-size:28px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;color:#fff}
-.section-sub{font-size:16px;color:var(--gray);margin-bottom:18px}
-.hint{font-size:14px;color:var(--gray2);margin-top:7px;padding:10px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border)}
- 
-.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);color:var(--green);font-size:13px;font-weight:700;padding:4px 11px;border-radius:20px;border:1px solid rgba(34,197,94,.2)}
-.live-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
- 
-.spinner{width:17px;height:17px;border:3px solid var(--border2);border-top-color:var(--yellow);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
- 
-.toggle-link{background:none;border:none;color:var(--yellow);font-size:15px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
- 
-.week-group{margin-bottom:18px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.week-group-head{background:var(--bg3);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.week-group-head:hover{background:var(--bg4)}
-.week-group-title{font-family:var(--font-head);font-size:17px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.3px}
-.week-group-body{padding:0 4px}
- 
-</style>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<html lang="fr"><head>
+    <meta charset="UTF-8">
+    <title>LIEBHERR | GESTION DES FICHES D'EMBOUTISSAGE</title>
+    <style>
+        :root { 
+            --liebherr-yellow: #F3C200; 
+            --liebherr-yellow-hover: #D9AD00; 
+            --liebherr-dark-bg: #000000; 
+            --page-bg: #FFFFFF;
+            --liebherr-card-bg: #F9F9F9;
+            --liebherr-input-bg: #FFFFFF;
+            --border-color: #DDDDDD;
+            --text-color: #111111;
+        }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            text-transform: uppercase; 
+        }
+        body { 
+            background-color: var(--page-bg); 
+            color: var(--text-color); 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+        }
+        
+        /* BARRE DE STATUT EN HAUT */
+        .status-bar {
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #555555;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: inline-block;
+            transition: all 0.4s ease;
+        }
+        
+        @keyframes pulse-admin {
+            0% { transform: scale(1); background-color: var(--liebherr-yellow); box-shadow: 0 0 4px var(--liebherr-yellow); }
+            50% { transform: scale(1.2); background-color: #FFF; box-shadow: 0 0 18px var(--liebherr-yellow); }
+            100% { transform: scale(1); background-color: var(--liebherr-yellow); box-shadow: 0 0 4px var(--liebherr-yellow); }
+        }
+        
+        /* BARRE LIEBHERR PRINCIPALE */
+        header { 
+            background-color: #000000; 
+            color: white; 
+            padding: 20px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 5px solid var(--liebherr-yellow);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .logo-liebherr { 
+            font-weight: 900; 
+            font-size: 28px; 
+            letter-spacing: 1px; 
+            color: var(--liebherr-yellow); 
+        }
+        
+        .btn-login-admin { 
+            background: transparent; 
+            color: var(--liebherr-yellow); 
+            border: 2px solid var(--liebherr-yellow); 
+            padding: 10px 24px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .btn-login-admin:hover { 
+            background: var(--liebherr-yellow); 
+            color: #000000; 
+        }
+        .btn-login-admin.active { 
+            background: #000000; 
+            color: #FF4444; 
+            border-color: #FF4444; 
+        }
+        
+        .container { max-width: 1200px; width: 100%; margin: 40px auto; padding: 0 20px; flex: 1; }
+        
+        /* BLOC CENTRAL DE RECHERCHE */
+        .search-container { 
+            background: var(--liebherr-card-bg); 
+            padding: 40px; 
+            margin-bottom: 35px; 
+            border: 1px solid var(--border-color); 
+            border-left: 6px solid #000000;
+            text-align: center; 
+            border-radius: 4px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        .search-container h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #000000; }
+        .search-container p { color: #555555; font-size: 13px; margin-bottom: 24px; letter-spacing: 0.5px; font-weight: bold; }
+        
+        .search-box { 
+            width: 100%; 
+            max-width: 650px; 
+            padding: 16px 24px; 
+            font-size: 18px; 
+            border: 2px solid #000000; 
+            text-align: center; 
+            border-radius: 4px; 
+            outline: none; 
+            transition: all 0.2s ease; 
+            background-color: var(--liebherr-input-bg);
+            color: #000000;
+            font-weight: 600;
+        }
+        .search-box:focus { 
+            border-color: var(--liebherr-yellow); 
+            box-shadow: 0 0 0 4px rgba(243,194,0,0.2); 
+        }
+        
+        /* BLOC TECHNIQUE DE L'ADMIN */
+        .admin-zone { display: none; margin-top: 30px; padding-top: 30px; border-top: 2px dashed var(--border-color); }
+        .admin-actions-bar { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+        
+        .btn-declencher-form { 
+            background: #000000; 
+            color: #FFFFFF; 
+            padding: 14px 32px; 
+            font-weight: 900; 
+            border: 2px solid #000000; 
+            cursor: pointer; 
+            font-size: 14px; 
+            letter-spacing: 0.5px; 
+            transition: all 0.2s; 
+        }
+        .btn-declencher-form:hover { background: transparent; color: #000000; }
+        
+        .btn-download-final { 
+            background: var(--liebherr-yellow); 
+            color: #000000; 
+            padding: 14px 32px; 
+            font-weight: 900; 
+            border: 2px solid var(--liebherr-yellow); 
+            cursor: pointer; 
+            font-size: 14px; 
+            letter-spacing: 0.5px; 
+            transition: background 0.2s; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            display: none; 
+        }
+        .btn-download-final:hover { background: var(--liebherr-yellow-hover); border-color: var(--liebherr-yellow-hover); }
+        
+        .form-ajout { 
+            display: none; 
+            background: #F0F0F0; 
+            padding: 30px; 
+            margin: 25px auto 0 auto; 
+            max-width: 600px; 
+            text-align: left; 
+            border: 1px solid var(--border-color); 
+            border-top: 4px solid #000000; 
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 13px; color: #000000; }
+        .form-group input[type="text"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #000000; 
+            border-radius: 4px; 
+            font-size: 14px; 
+            background-color: var(--liebherr-input-bg); 
+            color: #000000; 
+        }
+        .form-group input[type="text"]:focus { border-color: var(--liebherr-yellow); outline: none; }
+        
+        .file-input-wrapper { position: relative; margin-top: 5px; }
+        
+        .btn-file-select { 
+            display: block; 
+            background: #FFFFFF; 
+            color: #000000; 
+            padding: 14px; 
+            text-align: center; 
+            border: 2px solid #000000;
+            border-radius: 4px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-size: 13px; 
+            transition: all 0.2s ease;
+        }
+        .btn-file-select:hover { background: #000000; color: #FFFFFF; }
+        .file-name-preview { display: block; margin-top: 6px; font-size: 12px; color: #000000; font-weight: bold; word-break: break-all; text-align: center; }
+        
+        .btn-valider { 
+            background: var(--liebherr-yellow); 
+            color: #000000; 
+            border: none; 
+            padding: 14px; 
+            font-weight: bold; 
+            width: 100%; 
+            cursor: pointer; 
+            font-size: 14px; 
+            letter-spacing: 0.5px; 
+            margin-top: 10px; 
+            transition: background 0.2s;
+        }
+        .btn-valider:hover { background: var(--liebherr-yellow-hover); }
+        
+        /* GRILLE DES CARTES */
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .card { 
+            background: var(--liebherr-card-bg); 
+            border: 1px solid var(--border-color); 
+            border-top: 5px solid #000000; 
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            border-radius: 4px; 
+            transition: all 0.2s ease; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); border-color: #000000; }
+        .card h3 { font-size: 19px; font-weight: 800; margin-bottom: 6px; color: #000000; }
+        .card p { font-size: 13px; color: #555555; margin-bottom: 24px; min-height: 38px; line-height: 1.4; font-weight: 500; }
+        
+        .btn-open { 
+            display: block; 
+            text-align: center; 
+            background: #000000; 
+            color: #FFFFFF; 
+            text-decoration: none; 
+            padding: 12px; 
+            font-weight: 700; 
+            font-size: 13px; 
+            letter-spacing: 0.5px; 
+            transition: all 0.2s; 
+            border-radius: 4px; 
+        }
+        .btn-open:hover { background: var(--liebherr-yellow); color: #000000; }
+        
+        .btn-delete { 
+            display: none; 
+            background: transparent; 
+            color: #FF4444; 
+            border: 2px solid #FF4444; 
+            padding: 10px; 
+            margin-top: 10px; 
+            font-weight: bold; 
+            width: 100%; 
+            cursor: pointer; 
+            font-size: 11px; 
+            letter-spacing: 0.5px; 
+            transition: all 0.2s; 
+            border-radius: 4px; 
+        }
+        .btn-delete:hover { background: #FF4444; color: white; }
+
+        /* MODALES */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .modal-box {
+            background: #FFFFFF;
+            border: 3px solid #000000;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            border-radius: 4px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-box h3 { color: #000000; margin-bottom: 15px; font-size: 20px; font-weight: 900; }
+        .modal-box p { font-size: 14px; color: #333333; margin-bottom: 20px; line-height: 1.5; font-weight: bold; }
+        .modal-input {
+            width: 100%; padding: 12px; background: #FFFFFF; border: 2px solid #000000; color: #000000;
+            font-size: 18px; text-align: center; margin-bottom: 20px; outline: none; font-weight: bold;
+        }
+        .modal-input:focus { border-color: var(--liebherr-yellow); }
+        .modal-buttons { display: flex; justify-content: center; gap: 15px; }
+        .btn-modal-confirm { background: var(--liebherr-yellow); color: #000000; border: none; padding: 10px 24px; font-weight: bold; cursor: pointer; border: 2px solid var(--liebherr-yellow); }
+        .btn-modal-cancel { background: transparent; color: #000000; border: 2px solid #000000; padding: 10px 24px; font-weight: bold; cursor: pointer; }
+        .btn-modal-confirm:hover { background: var(--liebherr-yellow-hover); border-color: var(--liebherr-yellow-hover); }
+        .btn-modal-cancel:hover { background: #000000; color: #FFFFFF; }
+    </style>
 </head>
 <body>
- 
-<div class="topbar">
-  <div class="logo"><div class="logo-dot"></div>TPM<span>Connect</span></div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="sync-indicator" id="sync-status">
-      <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-label">Connexion...</span>
-    </div>
-    <div class="topbar-tabs">
-      <button class="topbar-tab active" onclick="nav('operator')" id="tab-operator">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7M14 17h7M14 20h7"/></svg>
-        Opér.
-      </button>
-      <button class="topbar-tab" onclick="nav('dashboard')" id="tab-dashboard">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-        Tableau
-      </button>
-      <button class="topbar-tab" onclick="nav('admin')" id="tab-admin">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        Admin
-      </button>
-    </div>
-  </div>
-</div>
-<div class="hazard"></div>
- 
-<div class="view active" id="view-operator"><div id="op-content"></div></div>
-<div class="view" id="view-dashboard"><div id="db-content"></div></div>
-<div class="view" id="view-admin"><div id="admin-content"></div></div>
- 
-<!-- Modal code-barres -->
-<div class="modal-overlay" id="bc-modal">
-  <div class="modal-box">
-    <div id="bc-modal-title" style="font-size:20px;font-weight:700;margin-bottom:4px;color:#fff"></div>
-    <div id="bc-modal-sub" style="font-size:14px;color:var(--gray);margin-bottom:10px"></div>
-    <div id="bc-modal-inner" style="background:#fff;padding:14px;border-radius:8px;display:inline-block;margin:8px auto">
-      <canvas id="bc-canvas"></canvas>
-    </div>
-    <div style="font-size:14px;color:var(--gray);margin-bottom:12px">Plastifiez et collez sur le poste — un scan avec la douchette ouvre directement cette machine</div>
-    <div style="display:flex;gap:7px">
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="downloadBC()">Télécharger</button>
-      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeBC()">Fermer</button>
-    </div>
-  </div>
-</div>
- 
-<!-- Pop-up rappel maintenance au démarrage -->
-<div class="modal-overlay" id="startup-modal">
-  <div class="modal-box wide">
-    <div class="lock-icon" style="margin:0 0 14px;background:var(--yellow-dim)">
-      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </div>
-    <div class="section-title">Maintenance premier niveau à faire</div>
-    <div class="section-sub">Cette semaine (<span id="su-weeklabel"></span>), certaines machines n'ont pas encore été contrôlées :</div>
-    <div id="su-list" style="max-height:200px;overflow:auto;margin-bottom:14px"></div>
-    <div style="display:flex;gap:7px">
-      <button class="btn btn-primary btn-sm" style="flex:1" onclick="closeStartup(true)">Faire la TPM maintenant</button>
-      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeStartup(false)">Plus tard</button>
-    </div>
-  </div>
-</div>
- 
-<script>
-// ════════════════════════════════════════════
-// CONFIG — URL de ton Google Apps Script déployé (NE PAS CHANGER)
-// ════════════════════════════════════════════
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
-const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
-// URL du dossier où sont déposés les PDF de fiches d'instruction.
-// Fixée en dur vers l'adresse complète du dépôt GitHub Pages, pour que les liens
-// fonctionnent même si le site est ouvert sans le "/" final (ex: un raccourci
-// pointant vers ".../tpmconnect" au lieu de ".../tpmconnect/"), ce qui causait
-// des erreurs 404 sur les PDF.
-const PDF_FOLDER_URL = 'https://liebherr-montauban.github.io/tpmconnect/';
- 
-// ════════════════════════════════════════════
-// GESTION SEMAINE (réinitialisation dimanche soir / minuit -> lundi)
-// ════════════════════════════════════════════
-function mondayOf(d){
-  const x=new Date(d);
-  const day=x.getDay(); // 0=dim..6=sam
-  const diff=x.getDate()-day+(day===0?-6:1);
-  x.setDate(diff);
-  x.setHours(0,0,0,0);
-  return x;
-}
-function currentWeekKey(){
-  const m=mondayOf(new Date());
-  return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-'+String(m.getDate()).padStart(2,'0');
-}
-function weekLabel(key){
-  const d=new Date(key+'T00:00:00');
-  const end=new Date(d); end.setDate(d.getDate()+6);
-  const fmt=x=>x.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
-  return fmt(d)+' au '+fmt(end);
-}
-// Jour ISO : 1=lundi ... 7=dimanche
-function isoDay(){ const d=new Date().getDay(); return d===0?7:d; }
-// Rappel "dépêchez-vous" actif dès jeudi (jour 4) jusqu'à dimanche (jour 7)
-function isUrgentPeriod(){ return isoDay()>=4; }
- 
-function today(){ return new Date().toLocaleDateString('fr-FR'); }
-function nowTime(){ return new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
-function fmtDuration(sec){
-  if(sec==null) return '—';
-  const m=Math.floor(sec/60), s=sec%60;
-  return m>0 ? `${m} min ${String(s).padStart(2,'0')} s` : `${s} s`;
-}
- 
-// Icône par catégorie de machine — repère visuel rapide sur poste industriel
-const CAT_ICON = { 'Presse':'', 'Fraisage':'', 'Tournage':'', 'Ligne':'' };
-function catIcon(cat){ return CAT_ICON[cat] || ''; }
- 
-function defaultData(){
-  return {
-    machines:[
-      {id:'PR-01',name:'Presse 01',cat:'Presse'},
-      {id:'PR-02',name:'Presse 02',cat:'Presse'},
-      {id:'PR-03',name:'Presse 03',cat:'Presse'},
-      {id:'FR-01',name:'Fraiseuse 01',cat:'Fraisage'},
-      {id:'FR-02',name:'Fraiseuse 02',cat:'Fraisage'},
-      {id:'TO-01',name:'Tour 01',cat:'Tournage'},
-      {id:'LG-01',name:'Ligne Assemblage A',cat:'Ligne'},
-      {id:'LG-02',name:'Ligne Assemblage B',cat:'Ligne'},
-    ],
-    operators:{
-      'Presse':['Marie D.','Karim B.','Luc M.','Sofia A.'],
-      'Fraisage':['Yann T.','Pierre C.','Amine R.'],
-      'Tournage':['Sophie L.','Marc B.'],
-      'Ligne':['Amine R.','Nadia F.','Jean P.','Karim B.'],
-    },
-    questions:{
-      'Presse':["Niveau d'huile hydraulique","Contrôle des barrières immatérielles","État des joints et garnitures","Pression de serrage (manomètre)","Nettoyage du bac de récupération"],
-      'Fraisage':["Niveau d'huile de broche","État des fraises (usure visible)","Serrage des brides","Lubrification des glissières"],
-      'Tournage':["État de la pointe de centrage","Niveau de liquide de coupe","Mandrin : usure des mâchoires"],
-      'Ligne':["Capteurs de présence opérationnels","Convoyeur : tension de courroie","Arrêts d'urgence testés","Vérification des préhenseurs"],
-    },
-    history:[],       // archive complète, jamais supprimée
-    weekKey: currentWeekKey(),
-    weekRecords:{},    // { machineId: record } pour la semaine en cours
-    instructionSheets:{}, // { machineId: {fileName, addedAt} } — le PDF lui-même vit à côté du fichier HTML
-    anomalies:[]        // { id, machineId, machineName, reportedDate, reportedTime, reportedBy, status, resolvedBy, resolvedDate, notes }
-  };
-}
- 
-let APP = defaultData();
-let lastKnownJSON = '';
-let isOnline = false;
-let initialSyncDone = false;
-let initialSyncError = false;
-let startupModalShown = false;
- 
-function rolloverWeekIfNeeded(){
-  const wk=currentWeekKey();
-  if(APP.weekKey!==wk){
-    APP.weekKey=wk;
-    APP.weekRecords={};
-  }
-}
- 
-// ════════════════════════════════════════════
-// SYNC ENGINE — Google Sheets via Apps Script
-// ════════════════════════════════════════════
-function setSyncState(state){
-  const dot=document.getElementById('sync-dot');
-  const lbl=document.getElementById('sync-label');
-  if(!dot) return;
-  dot.className='sync-dot';
-  if(state==='live'){ dot.classList.add('live'); lbl.textContent='Sheet connecté'; isOnline=true; }
-  else if(state==='syncing'){ dot.classList.add('syncing'); lbl.textContent='Synchro...'; }
-  else if(state==='error'){ dot.classList.add('error'); lbl.textContent='Hors-ligne'; isOnline=false; }
-  else { lbl.textContent='Connexion...'; }
-}
- 
-async function fetchFromSheet(){
-  try{
-    const res = await fetch(SHEET_API_URL + '?t=' + Date.now());
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    if(data && Object.keys(data).length > 0 && data.machines){
-      const newJSON = JSON.stringify(data);
-      const firstLoad = !initialSyncDone;
-      if(newJSON !== lastKnownJSON){
-        const changed = lastKnownJSON !== '';
-        APP = data;
-        if(!APP.weekKey) APP.weekKey = currentWeekKey();
-        if(!APP.weekRecords) APP.weekRecords = {};
-        if(!APP.instructionSheets) APP.instructionSheets = {};
-        if(!APP.anomalies) APP.anomalies = [];
-        rolloverWeekIfNeeded();
-        lastKnownJSON = newJSON;
-        initialSyncDone = true;
-        rerenderActiveView();
-        if(changed) showSyncFlash();
-        maybeShowStartupModal();
-      } else if(firstLoad){
-        initialSyncDone = true;
-        rerenderActiveView();
-        maybeShowStartupModal();
-      }
-      setSyncState('live');
-      return true;
-    } else {
-      // Sheet vide -> on initialise avec les données par défaut
-      lastKnownJSON = JSON.stringify(APP);
-      initialSyncDone = true;
-      await pushToSheet();
-      rerenderActiveView();
-      setSyncState('live');
-      maybeShowStartupModal();
-      return true;
-    }
-  }catch(err){
-    setSyncState('error');
-    if(!initialSyncDone){ initialSyncError = true; rerenderActiveView(); }
-    return false;
-  }
-}
- 
-async function pushToSheet(){
-  setSyncState('syncing');
-  try{
-    await fetch(SHEET_API_URL, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify(APP)
-    });
-    lastKnownJSON = JSON.stringify(APP);
-    setSyncState('live');
-  }catch(err){
-    setSyncState('error');
-  }
-}
- 
-function saveData(){
-  pushToSheet();
-}
- 
-// Récupère la toute dernière version du Sheet, applique le changement par-dessus,
-// puis pousse le résultat. Réduit fortement le risque que deux appareils
-// s'écrasent mutuellement en écrivant en même temps.
-async function syncedWrite(mutator){
-  setSyncState('syncing');
-  await fetchFromSheet();
-  rolloverWeekIfNeeded();
-  mutator();
-  await pushToSheet();
-  rerenderActiveView();
-}
- 
-function showSyncFlash(){
-  const lbl=document.getElementById('sync-label');
-  if(lbl){
-    const prev=lbl.textContent;
-    lbl.textContent='Mis à jour';
-    lbl.style.color='var(--yellow)';
-    setTimeout(()=>{ lbl.textContent=prev; lbl.style.color=''; },1200);
-  }
-}
- 
-function rerenderActiveView(){
-  const cv=document.querySelector('.view.active');
-  if(!cv) return;
-  if(cv.id==='view-dashboard') renderDashboard();
-  else if(cv.id==='view-admin' && !adminState.locked) renderAdmin();
-  else if(cv.id==='view-operator'){
-    // On rafraîchit tant que l'opérateur n'a pas vraiment commencé à remplir
-    const noProgress = !opState.operatorName && Object.keys(opState.answers).length===0 && !opState.submitted;
-    if(noProgress) renderOperator();
-  }
-}
- 
-setInterval(()=>{ rolloverWeekIfNeeded(); fetchFromSheet(); }, POLL_INTERVAL);
- 
-// ════════════════════════════════════════════
-// POP-UP DE DÉMARRAGE — maintenance premier niveau
-// ════════════════════════════════════════════
-function pendingMachinesThisWeek(){
-  return APP.machines.filter(m=>!APP.weekRecords[m.id]);
-}
-function maybeShowStartupModal(){
-  if(startupModalShown) return;
-  const pending=pendingMachinesThisWeek();
-  if(pending.length===0) return;
-  startupModalShown=true;
-  document.getElementById('su-weeklabel').textContent=weekLabel(APP.weekKey);
-  document.getElementById('su-list').innerHTML = pending.map(m=>
-    `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <span>${catIcon(m.cat)} ${m.name}</span><span class="badge ${isUrgentPeriod()?'badge-orange':'badge-gray'}">${m.cat}</span>
-    </div>`).join('');
-  document.getElementById('startup-modal').classList.add('open');
-}
-function closeStartup(goToOperator){
-  document.getElementById('startup-modal').classList.remove('open');
-  if(goToOperator) nav('operator');
-}
- 
-// ════════════════════════════════════════════
-// SCAN DOUCHETTE — capture clavier globale (code-barres = ID machine)
-// ════════════════════════════════════════════
-let scanBuffer='';
-let scanTimer=null;
-document.addEventListener('keydown', function(e){
-  if(e.key==='Enter'){
-    const code=scanBuffer.trim();
-    scanBuffer='';
-    if(code.length>=2) handleScan(code);
-    return;
-  }
-  if(e.key.length===1){ scanBuffer+=e.key; }
-  clearTimeout(scanTimer);
-  scanTimer=setTimeout(()=>{ scanBuffer=''; },350);
-});
-function extractMachineCode(raw){
-  const code=(raw||'').trim();
-  // QR contenant une URL complète (ex: https://.../tpmconnect/?machine=PR-01)
-  try{
-    const u=new URL(code);
-    const p=u.searchParams.get('machine');
-    if(p) return p;
-  }catch(e){ /* pas une URL complète, on continue */ }
-  // Chaîne contenant "machine=XXX" sans être une URL valide
-  const m2=code.match(/machine=([^&\s]+)/i);
-  if(m2) return decodeURIComponent(m2[1]);
-  // Sinon on considère que c'est directement l'ID de la machine
-  return code;
-}
-// Ne garde que lettres et chiffres, en minuscule — insensible aux tirets/symboles
-// mal transcrits par une douchette configurée dans un autre agencement clavier (QWERTY/AZERTY)
-function normalizeCode(s){
-  return (s||'').toString().toLowerCase().replace(/[^a-z0-9]/g,'');
-}
-// ════════════════════════════════════════════
-// SÉCURITÉ SCAN — filet de rattrapage clavier AZERTY/QWERTY
-// Quand l'état Majuscule (Verr.Maj / Shift) attendu par la douchette n'est
-// pas le bon, elle envoie les chiffres de la rangée du haut sous forme de
-// symboles AZERTY non-shiftés (0->à, 7->è, 1->&, etc.). Ces caractères
-// étaient jusqu'ici simplement supprimés par normalizeCode, ce qui faisait
-// disparaître les chiffres de l'ID (ex: "PR-07" reçu comme "PR)àè").
-// On "retraduit" ces symboles en chiffres avant de normaliser, en plus de
-// la normalisation classique, et on teste les deux versions.
-// ════════════════════════════════════════════
-const AZERTY_DIGIT_MAP = {'&':'1','é':'2','"':'3',"'":'4','(':'5','-':'6','è':'7','_':'8','ç':'9','à':'0','§':'6'};
-function azertyDigitFix(s){
-  return (s||'').toString().replace(/[&é"'(\-è_çà§]/g, ch => AZERTY_DIGIT_MAP[ch] || ch);
-}
-// Cherche la machine correspondant au code scanné : normalisation classique
-// d'abord, puis en filet de sécurité, la version "chiffres AZERTY retraduits".
-function findMachineByCode(code){
-  const nStandard = normalizeCode(code);
-  let m = APP.machines.find(x=>normalizeCode(x.id)===nStandard);
-  if(m) return {machine:m, viaFallback:false};
-  const nFixed = normalizeCode(azertyDigitFix(code));
-  if(nFixed !== nStandard){
-    m = APP.machines.find(x=>normalizeCode(x.id)===nFixed);
-    if(m) return {machine:m, viaFallback:true};
-  }
-  return {machine:null, viaFallback:false};
-}
-function handleScan(raw){
-  const code=extractMachineCode(raw);
-  const {machine:m, viaFallback}=findMachineByCode(code);
-  showScanDebug(raw, code, !!m, viaFallback);
-  if(!m){
-    flashScanResult(false, code);
-    return;
-  }
-  flashScanResult(true, m.name);
-  nav('operator');
-  selectMachine(m.id, true);
-}
-// Affiche ce qui a été reçu, en clair, pour diagnostiquer un souci de disposition clavier (AZERTY/QWERTY) sur la douchette
-function showScanDebug(raw, parsed, matched, viaFallback){
-  const box=document.getElementById('scan-debug');
-  if(!box) return;
-  const idsList = APP.machines.map(x=>x.id).join(', ');
-  box.style.display='block';
-  box.style.borderColor = matched ? 'rgba(34,197,94,.4)' : 'rgba(232,64,64,.4)';
-  box.innerHTML = `
-    <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Dernier scan reçu</div>
-    <div style="font-family:var(--font-mono);font-size:18px;color:${matched?'var(--green)':'var(--red)'};word-break:break-all">"${raw}"</div>
-    <div style="font-size:13px;color:var(--gray);margin-top:6px">Code interprété : <span class="mono" style="color:var(--text)">${parsed}</span> (${raw.length} caractère${raw.length>1?'s':''})</div>
-    ${viaFallback?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">⚠ Correction clavier AZERTY appliquée (chiffres retraduits) — vérifiez la machine sélectionnée</div>`:''}
-    <div style="font-size:13px;color:var(--gray);margin-top:4px">${matched?'Correspond à une machine':'Ne correspond à aucun ID connu. IDs existants : '+idsList}</div>
-  `;
-}
-function flashScanResult(ok, label){
-  const lbl=document.getElementById('sync-label');
-  if(!lbl) return;
-  const prevColor=lbl.style.color, prevText=lbl.textContent;
-  lbl.textContent = ok ? 'Scan : '+label : 'Code inconnu';
-  lbl.style.color = ok ? 'var(--green)' : 'var(--red)';
-  setTimeout(()=>{ lbl.textContent=prevText; lbl.style.color=prevColor; },1600);
-}
- 
-// ════════════════════════════════════════════
-// NAVIGATION
-// ════════════════════════════════════════════
-function nav(v){
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.topbar-tab').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
-  document.getElementById('tab-'+v).classList.add('active');
-  if(v==='operator') renderOperator();
-  else if(v==='dashboard') renderDashboard();
-  else renderAdmin();
-}
- 
-function getParam(k){ return new URLSearchParams(window.location.search).get(k); }
- 
-// ════════════════════════════════════════════
-// VUE OPÉRATEUR
-// ════════════════════════════════════════════
-let opState = {
-  machineId: getParam('machine') || '',
-  operatorName: '',
-  answers: {},
-  submitted: false,
-  startTime: null,
-  lastDuration: null
-};
- 
-function getCat(id){ const m=APP.machines.find(x=>x.id===id); return m?m.cat:null; }
-function getMachineName(id){ const m=APP.machines.find(x=>x.id===id); return m?m.name:id; }
-function getRecord(id){ return APP.weekRecords[id]||null; }
 
-// Une machine n'est "en anomalie" pour le tableau de bord que si une anomalie
-// de la semaine en cours existe encore et n'a PAS été marquée résolue —
-// contrairement à record.anomaly qui reste figé à vrai même après résolution.
-function hasOpenAnomalyThisWeek(machineId){
-  return (APP.anomalies||[]).some(a=>a.machineId===machineId && a.weekKey===APP.weekKey && a.status!=='resolue');
-}
- 
-// ════════════════════════════════════════════
-// FICHES D'INSTRUCTION — PDF par machine (référence par nom de fichier)
-// Le PDF est déposé manuellement dans le MÊME DOSSIER que cette page HTML.
-// Seul le nom du fichier est stocké dans le Sheet (texte court, aucun souci de taille).
-// ════════════════════════════════════════════
-function getInstructionSheet(machineId){
-  return (APP.instructionSheets && APP.instructionSheets[machineId]) || null;
-}
-function instructionSheetUrl(fileName){
-  if(PDF_FOLDER_URL){
-    return PDF_FOLDER_URL.replace(/\/+$/,'') + '/' + encodeURIComponent(fileName);
-  }
-  return encodeURI(fileName);
-}
-function viewInstructionSheet(machineId){
-  const sheet = getInstructionSheet(machineId);
-  if(!sheet || !sheet.fileName){ alert('Fiche introuvable.'); return; }
-  const url = instructionSheetUrl(sheet.fileName);
-  const win = window.open(url, '_blank');
-  if(!win){ alert("Le navigateur a peut-être bloqué l'ouverture. Autorise les pop-ups pour ce site, ou vérifie l'URL : "+url); }
-}
-function setInstructionSheet(machineId){
-  const input=document.getElementById('instr-file-input');
-  if(!input) return;
-  input.dataset.machineId=machineId;
-  input.value='';
-  input.click();
-}
-function onInstructionFileSelected(inputEl){
-  const machineId=inputEl.dataset.machineId;
-  const file=inputEl.files && inputEl.files[0];
-  if(!machineId || !file) return;
-  const isPdf = file.type==='application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  if(!isPdf){ alert('Choisis un fichier PDF.'); return; }
-  // On ne lit QUE le nom du fichier, jamais son contenu — rien n'est envoyé/stocké dans le Sheet à part ce texte.
-  syncedWrite(()=>{
-    if(!APP.instructionSheets) APP.instructionSheets={};
-    APP.instructionSheets[machineId]={ fileName:file.name, addedAt: today()+' '+nowTime() };
-  }).then(renderAdmin);
-}
-function deleteInstructionSheet(machineId){
-  const sheet=getInstructionSheet(machineId);
-  if(!sheet) return;
-  if(!confirm(`Retirer le lien vers "${sheet.fileName}" pour cette machine ? (le fichier PDF lui-même n'est pas supprimé du dossier)`)) return;
-  syncedWrite(()=>{
-    if(APP.instructionSheets) delete APP.instructionSheets[machineId];
-  }).then(renderAdmin);
-}
- 
-// ════════════════════════════════════════════
-// CHRONOMÈTRE — visible pendant le remplissage de la TPM
-// ════════════════════════════════════════════
-let chronoInterval=null;
-function stopChrono(){
-  if(chronoInterval){ clearInterval(chronoInterval); chronoInterval=null; }
-}
-function updateChronoDisplay(){
-  const el=document.getElementById('chrono-display');
-  if(!el || !opState.startTime){ stopChrono(); return; }
-  const sec=Math.floor((Date.now()-opState.startTime)/1000);
-  const m=Math.floor(sec/60), s=sec%60;
-  el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-}
-function startChronoIfNeeded(){
-  stopChrono();
-  if(opState.machineId && !opState.submitted && opState.startTime){
-    chronoInterval=setInterval(updateChronoDisplay,1000);
-    updateChronoDisplay();
-  }
-}
- 
-function renderOperator(){
-  const c = document.getElementById('op-content');
- 
-  if(!initialSyncDone){
-    if(initialSyncError){
-      c.innerHTML = `
-      <div class="success-screen">
-        <div class="success-icon" style="background:rgba(232,64,64,.1);border-color:rgba(232,64,64,.3)">
-          <svg viewBox="0 0 24 24" stroke="var(--red)" fill="none" stroke-width="2"><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16" r="0.5" fill="var(--red)"/><circle cx="12" cy="12" r="10"/></svg>
-        </div>
-        <div class="section-title">Connexion impossible</div>
-        <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">Impossible de récupérer les machines à jour. Vérifie ta connexion internet.</div>
-        <button class="btn btn-primary" onclick="initialSyncError=false;renderOperator();fetchFromSheet();">Réessayer</button>
-      </div>`;
-      return;
-    }
-    c.innerHTML = `
-    <div class="success-screen">
-      <div class="success-icon" style="background:var(--yellow-dim);border-color:rgba(245,197,24,.3)">
-        <svg viewBox="0 0 24 24" stroke="var(--yellow)" style="animation:spin 1s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 11-9-9"/></svg>
-      </div>
-      <div class="section-title">Connexion en cours…</div>
-      <div style="font-size:13px;color:var(--gray);margin:5px 0 4px">Récupération de la liste des machines à jour</div>
+    <div class="status-bar">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">MODE CONSULTATION SIMPLE</span>
     </div>
-    <style>@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>`;
-    return;
-  }
- 
-  if(opState.submitted){
-    const hasIssue = Object.values(opState.answers).some(a=>a==='ko');
-    c.innerHTML = `
-    <div class="success-screen">
-      <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="section-title">TPM validée</div>
-      <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">${getMachineName(opState.machineId)} — ${nowTime()}</div>
-      ${hasIssue?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><strong>Anomalie signalée</strong> — alerte envoyée à la maintenance</span></div>`:''}
-      <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:13px;font-size:12px;color:#4ade80;margin-bottom:18px">
-        Fiche enregistrée sur Google Sheets — visible partout
-      </div>
-      <button class="btn btn-secondary" onclick="resetOp()">Nouvelle saisie</button>
-    </div>`;
-    return;
-  }
- 
-  const cat = getCat(opState.machineId);
-  const ops = cat ? (APP.operators[cat]||[]) : [];
-  const questions = cat ? (APP.questions[cat]||[]) : [];
-  const answered = Object.keys(opState.answers).length;
-  const allDone = opState.machineId && opState.operatorName && answered===questions.length && questions.length>0;
-  const existing = opState.machineId ? getRecord(opState.machineId) : null;
-  const urgent = isUrgentPeriod();
-  const pendingCount = pendingMachinesThisWeek().length;
-  const instrSheet = opState.machineId ? getInstructionSheet(opState.machineId) : null;
- 
-  let html = `
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-    <div class="section-title">Contrôle TPM</div>
-    <span class="badge badge-gray">Semaine du ${weekLabel(APP.weekKey)}</span>
-  </div>
-  <div class="section-sub">Scannez le code-barres du poste ou sélectionnez la machine</div>
- 
-  <div class="scan-banner">
-    <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><line x1="6" y1="6" x2="6" y2="18"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="13" y1="6" x2="13" y2="18"/><line x1="16" y1="6" x2="16" y2="18"/><line x1="19" y1="6" x2="19" y2="18"/></svg>
-    <span>Prêt à scanner — la machine se sélectionne automatiquement dès le scan du code-barres</span>
-  </div>
- 
-  <div id="scan-debug" class="card" style="display:none;border:1px solid var(--border2)"></div>
- 
-  ${urgent && pendingCount>0 ? `<div class="warn-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    <span><strong>Dépêchez-vous !</strong> ${pendingCount} machine${pendingCount>1?'s':''} restent à contrôler avant la fin de la semaine (reset dimanche soir).</span>
-  </div>`:''}
- 
-  ${!isOnline?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Connexion à Google Sheets indisponible — vérifie ta connexion</span></div>`:''}
- 
-  ${existing?`<div class="info-banner">
-    TPM déjà faite cette semaine par <strong>${existing.operator}</strong> le ${existing.date} à ${existing.time}
-  </div>`:''}
- 
-  <div class="card">
-    <label class="lbl">Machine</label>
-    <select onchange="selectMachine(this.value)">
-      <option value="">— Choisir une machine —</option>
-      ${APP.machines.map(m=>`<option value="${m.id}" ${opState.machineId===m.id?'selected':''}>${m.name} (${m.cat})</option>`).join('')}
-    </select>
-    ${instrSheet?`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:11px">
-      <div style="min-width:0">
-        <div style="font-size:13px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Fiche d'instruction</div>
-        <div style="font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${instrSheet.fileName}</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="viewInstructionSheet('${opState.machineId}')">📄 Voir la fiche</button>
-    </div>`:''}
-    <label class="lbl" style="margin-top:12px">Votre nom ${!opState.machineId?'<span style="color:var(--gray2);font-weight:400">(choisir machine d\'abord)</span>':''}</label>
-    <select id="op-name-select" onchange="selectOp(this.value)" ${!opState.machineId?'disabled':''}>
-      <option value="">— Sélectionner votre nom —</option>
-      ${ops.map(o=>`<option value="${o}" ${opState.operatorName===o?'selected':''}>${o}</option>`).join('')}
-    </select>
-    ${cat?`<div class="hint">Opérateurs habilités <strong>${cat}</strong> uniquement</div>`:''}
-  </div>`;
- 
-  if(opState.operatorName && questions.length>0){
-    html += `
-    <div class="machine-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <div>
-        <div class="cat-tag">${cat}</div>
-        <h2>${catIcon(cat)} ${getMachineName(opState.machineId)}</h2>
-        <p>Opérateur : ${opState.operatorName}</p>
-      </div>
-      <div style="text-align:center;flex-shrink:0;background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:12px 18px">
-        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Chrono</div>
-        <div id="chrono-display" style="font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--yellow)">00:00</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Points de contrôle</div>
-      ${questions.map((q,i)=>{
-        const ans=opState.answers[i]||'';
-        return `<div class="check-row">
-          <span class="check-q">${q}</span>
-          <div class="radio-pair">
-            <button class="radio-btn ${ans==='ok'?'ok-active':''}" onclick="setAns(${i},'ok')">OK</button>
-            <button class="radio-btn ${ans==='ko'?'ko-active':''}" onclick="setAns(${i},'ko')">Pb</button>
-          </div>
-        </div>`;
-      }).join('')}
-      <div class="progress-wrap">
-        <div class="progress-bar"><div class="progress-fill" id="pfill" style="width:${Math.round(answered/questions.length*100)}%"></div></div>
-        <div class="progress-label">${answered}/${questions.length} points renseignés</div>
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="submitTPM()" ${allDone?'':'disabled'}>
-      Valider la TPM
-    </button>
-    ${!allDone?`<div style="text-align:center;font-size:14px;color:var(--gray);margin-top:9px">Répondez à tous les points pour valider</div>`:''}`;
-  }
- 
-  c.innerHTML = html;
-  startChronoIfNeeded();
-}
- 
-function selectMachine(id, fromScan){
-  opState.machineId=id; opState.operatorName=''; opState.answers={};
-  opState.startTime = id ? Date.now() : null; // démarrage du chronomètre (mesuré, non affiché)
-  if(id) history.replaceState(null,'','?machine='+id);
-  renderOperator();
-}
-function selectOp(name){ opState.operatorName=name; renderOperator(); }
- 
-function setAns(i, val){
-  opState.answers[i]=val;
-  const questions=APP.questions[getCat(opState.machineId)]||[];
-  const pct=Math.round(Object.keys(opState.answers).length/questions.length*100);
-  const pf=document.getElementById('pfill');
-  if(pf) pf.style.width=pct+'%';
-  document.querySelectorAll('.check-row').forEach((row,idx)=>{
-    const ans=opState.answers[idx]||'';
-    const btns=row.querySelectorAll('.radio-btn');
-    if(btns[0]) btns[0].className='radio-btn'+(ans==='ok'?' ok-active':'');
-    if(btns[1]) btns[1].className='radio-btn'+(ans==='ko'?' ko-active':'');
-  });
-  const allDone=opState.machineId&&opState.operatorName&&Object.keys(opState.answers).length===questions.length&&questions.length>0;
-  const btn=document.querySelector('.btn-primary');
-  if(btn) btn.disabled=!allDone;
-  const lbl=document.querySelector('.progress-label');
-  if(lbl) lbl.textContent=`${Object.keys(opState.answers).length}/${questions.length} points renseignés`;
-}
- 
-function submitTPM(){
-  const cat=getCat(opState.machineId);
-  const questions=APP.questions[cat]||[];
-  if(Object.keys(opState.answers).length!==questions.length) return;
-  const hasIssue=Object.values(opState.answers).some(a=>a==='ko');
-  const machineId=opState.machineId, operatorName=opState.operatorName, answers={...opState.answers};
-  const durationSec = opState.startTime ? Math.max(1,Math.round((Date.now()-opState.startTime)/1000)) : null;
-  syncedWrite(()=>{
-    const record={
-      machineId, machineName:getMachineName(machineId),
-      operator:operatorName, cat, questions:[...questions],
-      time:nowTime(),
-      date:today(), weekKey:APP.weekKey,
-      answers, anomaly:hasIssue,
-      durationSec,
-      validations:{admin:null,chef:null}
-    };
-    APP.weekRecords[machineId]=record;
-    APP.history.unshift(record); // archive, jamais supprimée
-    if(hasIssue){
-      if(!APP.anomalies) APP.anomalies=[];
-      APP.anomalies.push({
-        id: machineId+'-'+Date.now(),
-        machineId, machineName:getMachineName(machineId),
-        weekKey:APP.weekKey,
-        reportedDate:today(), reportedTime:nowTime(), reportedBy:operatorName,
-        status:'signalee', // 'signalee' | 'en_cours' | 'resolue'
-        resolvedBy:null, resolvedDate:null, notes:''
-      });
-    }
-  });
-  opState.submitted=true;
-  opState.lastDuration=durationSec;
-  stopChrono();
-  renderOperator();
-}
- 
-function resetOp(){
-  opState={machineId:getParam('machine')||'',operatorName:'',answers:{},submitted:false,startTime:null,lastDuration:null};
-  renderOperator();
-}
- 
-// ════════════════════════════════════════════
-// VUE TABLEAU DE BORD
-// ════════════════════════════════════════════
-function renderDashboard(){
-  const c=document.getElementById('db-content');
-  const machines=APP.machines, records=APP.weekRecords;
-  const done=machines.filter(m=>records[m.id]).length;
-  const issues=machines.filter(m=>records[m.id]&&hasOpenAnomalyThisWeek(m.id)).length;
-  const pct=machines.length?Math.round(done/machines.length*100):0;
-  const now=nowTime();
-  const urgent=isUrgentPeriod();
-  const pending=machines.filter(m=>!records[m.id]);
-  const openAnomalies=(APP.anomalies||[]).filter(a=>a.status!=='resolue');
- 
-  let html=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-    <div class="section-title">Tableau de bord</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      ${isOnline?'<span class="live-badge">Sheets Live</span>':''}
-      <span style="font-size:14px;color:var(--gray)">Màj ${now}</span>
-    </div>
-  </div>
-  <div class="section-sub">État TPM — semaine du ${weekLabel(APP.weekKey)}</div>
- 
-  ${urgent && pending.length>0 ? `<div class="warn-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    <span><strong>Dépêchez-vous !</strong> ${pending.length} machine${pending.length>1?'s':''} encore non contrôlée${pending.length>1?'s':''} avant le reset de dimanche soir : ${pending.map(m=>m.name).join(' · ')}</span>
-  </div>`:''}
- 
-  ${issues>0?`<div class="alert-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <div><strong>${issues} anomalie${issues>1?'s':''} non résolue${issues>1?'s':''} cette semaine</strong><br>
-    ${machines.filter(m=>records[m.id]&&hasOpenAnomalyThisWeek(m.id)).map(m=>`${m.name}`).join(' · ')}</div>
-  </div>`:''}
- 
-  ${openAnomalies.length>issues?`<div class="warn-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span><strong>${openAnomalies.length} anomalie${openAnomalies.length>1?'s':''} non résolue${openAnomalies.length>1?'s':''}</strong> au total (toutes semaines confondues) — voir l'onglet Admin pour le suivi</span>
-  </div>`:''}
- 
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${done}</div><div class="stat-lbl">Validées</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--gray)">${machines.length-done}</div><div class="stat-lbl">En attente</div></div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--yellow)">${pct}%</div>
-      <div class="stat-lbl">Avancement</div>
-      <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${pct}%"></div></div>
-    </div>
-  </div>
- 
-  <div class="machine-grid">
-    ${machines.map(m=>{
-      const r=records[m.id];
-      const openIssue = r && hasOpenAnomalyThisWeek(m.id);
-      const cls = r?(openIssue?'issue':'done') : (urgent?'urgent':'');
-      return `<div class="machine-tile ${cls}">
-        <div class="tile-name">${catIcon(m.cat)} ${m.name}</div>
-        <div style="margin-bottom:5px"><span class="badge badge-gray">${m.cat}</span></div>
-        ${r?`<div class="tile-info"><span class="dot ${openIssue?'dot-red':'dot-green'}"></span> ${openIssue?'Anomalie':(r.anomaly?'Anomalie résolue':'Validé')}</div>
-        <div class="tile-info" style="margin-top:2px">${r.operator} · ${r.time}</div>`
-        :`<div class="tile-info"><span class="dot ${urgent?'dot-orange':'dot-gray'}"></span> En attente</div>`}
-      </div>`;
-    }).join('')}
-  </div>
- 
-  ${done>0?`<div class="card">
-    <div class="card-title">Récapitulatif de la semaine</div>
-    <table class="tbl">
-      <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th></tr></thead>
-      <tbody>
-        ${machines.filter(m=>records[m.id]).map(m=>{
-          const r=records[m.id];
-          return `<tr><td style="font-weight:600">${m.name}</td><td>${r.operator}</td>
-          <td style="color:var(--gray)">${r.date}</td>
-          <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${r.time}</td>
-          <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${fmtDuration(r.durationSec)}</td>
-          <td>${hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">OK</span>`)}</td></tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`:`<div style="text-align:center;padding:28px 20px;color:var(--gray);font-size:13px">
-    Aucune TPM validée pour l'instant cette semaine.
-  </div>`}`;
- 
-  c.innerHTML=html;
-}
- 
-// ════════════════════════════════════════════
-// VUE ADMIN
-// ════════════════════════════════════════════
-let adminState={locked:true,pass:'',role:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined};
-const ADMIN_CODE='1234';
-const CHEF_CODE='4321';
- 
-// ════════════════════════════════════════════
-// SUIVI DES ANOMALIES — statut Signalée -> En cours -> Résolue
-// ════════════════════════════════════════════
-function anomalyStatusBadge(status){
-  if(status==='en_cours') return '<span class="badge badge-orange">En cours</span>';
-  if(status==='resolue') return '<span class="badge badge-green">Résolue</span>';
-  return '<span class="badge badge-red">Signalée</span>';
-}
-function updateAnomalyStatus(id, newStatus){
-  syncedWrite(()=>{
-    if(!APP.anomalies) APP.anomalies=[];
-    const a=APP.anomalies.find(x=>x.id===id);
-    if(!a) return;
-    a.status=newStatus;
-    if(newStatus==='resolue'){
-      a.resolvedBy = adminState.role==='chef' ? "Chef d'atelier" : 'Administrateur';
-      a.resolvedDate = today()+' '+nowTime();
-    } else {
-      a.resolvedBy=null; a.resolvedDate=null;
-    }
-  }).then(renderAdmin);
-}
-function renderAnomaliesCard(){
-  const list=(APP.anomalies||[]).slice().reverse();
-  const open=list.filter(a=>a.status!=='resolue');
-  return `<div class="card" style="border-color:${open.length>0?'rgba(232,64,64,.3)':'var(--border)'}">
-    <div class="card-title">Suivi des anomalies (${open.length} ouverte${open.length>1?'s':''})</div>
-    ${list.length===0?`<p style="font-size:15px;color:var(--gray)">Aucune anomalie enregistrée pour l'instant.</p>`:`
-    <table class="tbl">
-      <thead><tr><th>Machine</th><th>Signalée le</th><th>Par</th><th>Statut</th><th>Action</th></tr></thead>
-      <tbody>
-        ${list.map(a=>`
-          <tr>
-            <td style="font-weight:600">${a.machineName}</td>
-            <td style="color:var(--gray)">${a.reportedDate} ${a.reportedTime}</td>
-            <td>${a.reportedBy}</td>
-            <td>${anomalyStatusBadge(a.status)}</td>
-            <td>
-              ${a.status==='signalee'?`<button class="btn btn-secondary btn-sm" onclick="updateAnomalyStatus('${a.id}','en_cours')">Prendre en charge</button>`:''}
-              ${a.status==='en_cours'?`<button class="btn btn-primary btn-sm" onclick="updateAnomalyStatus('${a.id}','resolue')">Marquer résolue</button>`:''}
-              ${a.status==='resolue'?`<span style="font-size:12px;color:var(--gray)">${a.resolvedBy} · ${a.resolvedDate}</span>`:''}
-            </td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`}
-  </div>`;
-}
- 
-// ════════════════════════════════════════════
-// VALIDATION MAINTENANCE — double signature Admin / Chef d'atelier
-// ════════════════════════════════════════════
-function isValidated(record, role){
-  return !!(record && record.validations && record.validations[role] && record.validations[role].done);
-}
-function validationBadge(record, role){
-  const v = record && record.validations ? record.validations[role] : null;
-  if(v && v.done) return `<span class="badge badge-green">✓ ${v.time}</span>`;
-  return `<span class="badge badge-gray">En attente</span>`;
-}
-function machinesDoneNotValidated(role){
-  return APP.machines.filter(m=>{
-    const r=APP.weekRecords[m.id];
-    return r && !isValidated(r, role);
-  });
-}
-function renderValidationBanner(role){
-  if(!isUrgentPeriod()) return '';
-  const pending = machinesDoneNotValidated(role);
-  if(pending.length===0) return '';
-  const roleLabel = role==='admin' ? 'Administrateur' : "Chef d'atelier";
-  return `<div class="warn-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    <span><strong>À valider !</strong> ${pending.length} fiche${pending.length>1?'s':''} contrôlée${pending.length>1?'s':''} mais pas encore validée${pending.length>1?'s':''} par ${roleLabel} avant le reset de dimanche soir : ${pending.map(m=>m.name).join(' · ')}</span>
-  </div>`;
-}
-function toggleValidation(machineId, role){
-  const record = APP.weekRecords[machineId];
-  if(!record) return;
-  const label = role==='admin' ? 'Administrateur' : "Chef d'atelier";
-  if(isValidated(record, role)){
-    if(!confirm(`Annuler la validation (${label}) pour ${record.machineName||machineId} ?`)) return;
-    syncedWrite(()=>{
-      const r=APP.weekRecords[machineId];
-      if(r && r.validations) r.validations[role]=null;
-    }).then(renderAdmin);
-  } else {
-    syncedWrite(()=>{
-      const r=APP.weekRecords[machineId];
-      if(!r) return;
-      if(!r.validations) r.validations={admin:null,chef:null};
-      r.validations[role]={done:true,by:label,date:today(),time:nowTime()};
-    }).then(renderAdmin);
-  }
-}
- 
-function renderChefView(c){
-  const urgent=isUrgentPeriod();
-  const pendingTPM=APP.machines.filter(m=>!APP.weekRecords[m.id]);
-  c.innerHTML=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-    <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— Chef d'atelier</span></div>
-    <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
-  </div>
-  <div class="section-sub">Suivi TPM — semaine du ${weekLabel(APP.weekKey)}</div>
- 
-  ${pendingTPM.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
-    ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pendingTPM.length} machine${pendingTPM.length>1?'s':''} pas encore contrôlée${pendingTPM.length>1?'s':''} cette semaine : ${pendingTPM.map(m=>m.name).join(' · ')}
-  </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
- 
-  ${renderValidationBanner('chef')}
- 
-  ${renderAnomaliesCard()}
- 
-  <div class="card">
-    <div class="card-title">Suivi hebdomadaire — qui a fait / qui a validé</div>
-    <table class="tbl">
-      <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
-      <tbody>
-        ${APP.machines.map(m=>{
-          const r=APP.weekRecords[m.id];
-          let statusCell;
-          if(r) statusCell = hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">Fait</span>`);
-          else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
-          return `<tr>
-            <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
-            <td><span class="badge badge-yellow">${m.cat}</span></td>
-            <td>${statusCell}</td>
-            <td>${r?r.operator:'—'}</td>
-            <td>${r?validationBadge(r,'admin'):'—'}</td>
-            <td>${r?`<button class="btn btn-sm ${isValidated(r,'chef')?'btn-secondary':'btn-primary'}" onclick="toggleValidation('${m.id}','chef')">${isValidated(r,'chef')?'✓ Validé':'Valider'}</button>`:'—'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="hint">Vous validez en tant que Chef d'atelier. La colonne "Validation Admin" reflète en temps réel la validation de l'administrateur.</div>
-  </div>`;
-}
- 
-function renderAdmin(){
-  const c=document.getElementById('admin-content');
-  if(adminState.locked){
-    c.innerHTML=`
-    <div class="lock-screen">
-      <div class="lock-box">
-        <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
-        <div class="section-title" style="margin-bottom:4px">Accès superviseur</div>
-        <div class="section-sub">1234 = Administrateur · 4321 = Chef d'atelier</div>
-        <label class="lbl">Code secret</label>
-        <input type="password" placeholder="••••" id="admin-pass" oninput="adminState.pass=this.value" onkeydown="if(event.key==='Enter')tryAdmin()">
-        <button class="btn btn-primary" style="margin-top:9px" onclick="tryAdmin()">Accéder</button>
-        <div id="admin-err" style="color:var(--red);font-size:12px;margin-top:7px;display:none">Code incorrect</div>
-      </div>
-    </div>`;
-    return;
-  }
-  if(adminState.role==='chef'){ renderChefView(c); return; }
-  const cats=Object.keys(APP.questions);
-  const urgent=isUrgentPeriod();
-  const pending=APP.machines.filter(m=>!APP.weekRecords[m.id]);
- 
-  c.innerHTML=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-    <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— Administrateur</span></div>
-    <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
-  </div>
-  <div class="section-sub">Gestion des machines, codes-barres et suivi hebdomadaire — semaine du ${weekLabel(APP.weekKey)}</div>
- 
-  <div class="card" style="border-color:rgba(245,197,24,.35)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="card-title" style="margin-bottom:0">Codes-barres — un par machine, à coller sur le poste</div>
-      <button class="btn btn-primary btn-sm" onclick="printAllBC()">Imprimer tous les codes-barres</button>
-    </div>
-    <div id="qr-thumb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px"></div>
-    <div class="hint" style="margin-top:12px">Touchez un code-barres pour l'agrandir et le télécharger individuellement. Un scan à la douchette sélectionne directement cette machine.</div>
-  </div>
- 
-  ${pending.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
-    ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
-  </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
- 
-  ${renderValidationBanner('admin')}
- 
-  ${renderAnomaliesCard()}
- 
-  <div class="card">
-    <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
-    <table class="tbl">
-      <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Durée</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
-      <tbody>
-        ${APP.machines.map(m=>{
-          const r=APP.weekRecords[m.id];
-          let statusCell;
-          if(r) statusCell = hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">Fait</span>`);
-          else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
-          return `<tr>
-            <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
-            <td><span class="badge badge-yellow">${m.cat}</span></td>
-            <td>${statusCell}</td>
-            <td>${r?r.operator:'—'}</td>
-            <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono)">${r?fmtDuration(r.durationSec):'—'}</td>
-            <td>${r?`<button class="btn btn-sm ${isValidated(r,'admin')?'btn-secondary':'btn-primary'}" onclick="toggleValidation('${m.id}','admin')">${isValidated(r,'admin')?'✓ Validé':'Valider'}</button>`:'—'}</td>
-            <td>${r?validationBadge(r,'chef'):'—'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier.</div>
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${cats.map(cat=>{
-          const count=APP.machines.filter(m=>m.cat===cat).length;
-          return `<tr>
-            <td style="font-weight:600">${cat}</td>
-            <td>${count}</td>
-            <td style="color:var(--gray)">${(APP.questions[cat]||[]).length}</td>
-            <td style="color:var(--gray)">${(APP.operators[cat]||[]).length}</td>
-            <td style="display:flex;gap:6px">
-              <button class="btn btn-secondary btn-sm" onclick="renameCategory('${cat}')">Renommer</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat}')" ${count>0?'disabled title="Réassignez ou supprimez d\'abord les machines de cette famille"':''}>Supprimer</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">Parc machine (${APP.machines.length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="toggleAddMachine()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter</button>
-    </div>
-    ${adminState.addingMachine?`
-    <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px">
-        <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Nom</label>
-        <input type="text" placeholder="Ex: Presse 12" id="new-mname" value="${adminState.newName}" oninput="adminState.newName=this.value"></div>
-        <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Catégorie</label>
-        <select id="new-mcat" onchange="adminState.newCat=this.value">${cats.map(c2=>`<option ${adminState.newCat===c2?'selected':''}>${c2}</option>`).join('')}</select></div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + Code-barres</button>
-    </div>`:''}
-    <div style="display:flex;flex-direction:column;gap:12px">
-      ${APP.machines.map(m=>{
-        const sheet=getInstructionSheet(m.id);
-        return `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
-            <div style="min-width:0">
-              <div style="font-weight:700;font-size:18px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
-              <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">${m.id}</div>
-            </div>
-            <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteMachine('${m.id}')">Supprimer</button>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-            <select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;flex:1;min-width:130px;padding:9px 12px;font-size:14px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select>
-            <button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Code-barres</button>
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:12px">
-            <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Fiche d'instruction</div>
-            ${sheet?`
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <span class="badge badge-green cell-clip" style="width:fit-content;max-width:100%">📄 ${sheet.fileName}</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-secondary btn-sm" onclick="viewInstructionSheet('${m.id}')">Voir</button>
-                  <button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">Modifier</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteInstructionSheet('${m.id}')">Retirer</button>
+
+    <header>
+        <div class="logo-liebherr">LIEBHERR</div>
+        <button id="btnAdminAuth" class="btn-login-admin" onclick="ouvrirModalAuth()">CONNEXION RESPONSABLE</button>
+    </header>
+    
+    <div class="container">
+        <section class="search-container">
+            <h2>SUIVI OUTILLAGES D'EMBOUTISSAGE</h2>
+            <p>RECHERCHE INSTANTANÉE PAR RÉFÉRENCE OUTIL</p>
+            <input type="text" id="searchInput" class="search-box" placeholder="SAISIR UNE RÉFÉRENCE (EX: SEM313)..." oninput="filtrerOutils()">
+            
+            <div id="adminZone" class="admin-zone">
+                <div style="background: #FFFFFF; border: 2px dashed #000000; padding: 20px; margin-bottom: 25px; text-align: left; border-radius: 4px;">
+                    <h4 style="color: #000000; font-weight: 900; margin-bottom: 12px; font-size: 14px; letter-spacing: 0.5px;">⚠️ PROTOCOLE DE SAUVEGARDE ET D'ARCHIVAGE (À SUIVRE IMPÉRATIVEMENT) :</h4>
+                    <ol style="margin-left: 20px; font-size: 12px; font-weight: bold; line-height: 1.6; color: #333333;">
+                        <li><span style="color: #FF4444;">ÉTAPE 1 :</span> FAITES VOS MODIFICATIONS SUR L'ÉCRAN (AJOUT OU SUPPRESSION).</li>
+                        <li><span style="color: #FF4444;">ÉTAPE 2 :</span> CLIQUEZ SUR LE BOUTON JAUNE <span style="background: var(--liebherr-yellow); color: #000; padding: 2px 4px;">💾 TÉLÉCHARGER LA VERSION FINALE</span> CI-DESSOUS.</li>
+                        <li><span style="color: #FF4444;">ÉTAPE 3 :</span> DANS LE DOSSIER RÉSEAU, RENOMMEZ L'ANCIEN FICHIER EN AJOUTANT LA DATE (EX: <span style="font-style: italic; color: #666;">EBTSG_OLD_2026.html</span>) ET GLISSEZ-LE DANS LE DOSSIER <span style="color: #000000; text-decoration: underline;">ARCHIVES</span>.</li>
+                        <li><span style="color: #FF4444;">ÉTAPE 4 :</span> PRENEZ LE NOUVEAU FICHIER QUE VOUS VENEZ DE TÉLÉCHARGER ET METTEZ-LE À LA PLACE DE L'ANCIEN (IL DOIT S'APPELER EXACTEMENT <span style="color: #000000;">EBTSG.html</span>).</li>
+                    </ol>
                 </div>
-              </div>
-            `:`<button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">+ Lier un PDF</button>`}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans le Sheet : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
-  </div>
- 
-  <div class="card">
-    <div class="card-title">Questions de contrôle</div>
-    ${cats.map(cat=>`
-    <div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span class="badge badge-yellow">${cat}</span>
-        <button class="btn btn-secondary btn-sm" onclick="addQuestion('${cat}')">+ Ajouter</button>
-      </div>
-      ${APP.questions[cat].map((q,i)=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
-        <span style="flex:1;padding-right:7px">${q}</span>
-        <button onclick="removeQ('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
-      </div>`).join('')}
-    </div>`).join('')}
-  </div>
- 
-  <div class="card">
-    <div class="card-title">Opérateurs (prénoms)</div>
-    ${cats.map(cat=>`
-    <div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span class="badge badge-yellow">${cat}</span>
-        <button class="btn btn-secondary btn-sm" onclick="addOperator('${cat}')">+ Ajouter</button>
-      </div>
-      ${(APP.operators[cat]||[]).map((o,i)=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
-        <span style="flex:1;padding-right:7px">${o}</span>
-        <button onclick="removeOperator('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
-      </div>`).join('')}
-      ${(APP.operators[cat]||[]).length===0?`<div style="font-size:12px;color:var(--gray2);padding:7px 0">Aucun opérateur pour cette catégorie</div>`:''}
-    </div>`).join('')}
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${adminState.showArchive?'14px':'0'}">
-      <div class="card-title" style="margin-bottom:0">Archives — historique par semaine (rien n'est supprimé)</div>
-      <button class="toggle-link" onclick="toggleArchive()">${adminState.showArchive?'Masquer':'Afficher'} (${APP.history.length})</button>
-    </div>
-    ${adminState.showArchive?renderArchiveByWeek():`<p style="font-size:15px;color:var(--gray)">${APP.history.length} fiche(s) archivée(s) depuis le début, classées automatiquement par semaine. Cliquez sur "Afficher" pour consulter l'historique complet — aucune donnée n'est jamais effacée.</p>`}
-  </div>`;
-  renderBCThumbGrid();
-}
- 
-// Regroupe l'historique par semaine (la plus récente en premier)
-function renderArchiveByWeek(){
-  if(APP.history.length===0){
-    return `<p style="font-size:15px;color:var(--gray)">Aucune fiche archivée pour l'instant.</p>`;
-  }
-  const groups={};
-  APP.history.forEach(r=>{
-    const wk=r.weekKey||currentWeekKey();
-    if(!groups[wk]) groups[wk]=[];
-    groups[wk].push(r);
-  });
-  const weekKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
-  if(adminState.expandedWeek===undefined){
-    adminState.expandedWeek = weekKeys[0]; // la semaine la plus récente ouverte par défaut, une seule fois
-  }
-  return weekKeys.map(wk=>{
-    const records=groups[wk];
-    const anomalies=records.filter(r=>r.anomaly).length;
-    const isOpen=adminState.expandedWeek===wk;
-    const isCurrent=wk===APP.weekKey;
-    return `<div class="week-group">
-      <div class="week-group-head" onclick="toggleWeekGroup('${wk}')">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span class="week-group-title">Semaine du ${weekLabel(wk)}</span>
-          ${isCurrent?'<span class="badge badge-yellow">En cours</span>':''}
-          <span class="badge badge-gray">${records.length} fiche${records.length>1?'s':''}</span>
-          ${anomalies>0?`<span class="badge badge-red">${anomalies} anomalie${anomalies>1?'s':''}</span>`:''}
-        </div>
-        <span style="font-size:20px;color:var(--gray);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .15s">▾</span>
-      </div>
-      ${isOpen?`<div class="week-group-body">
-        <table class="tbl">
-          <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th><th>Val. Admin</th><th>Val. Chef</th></tr></thead>
-          <tbody>
-            ${records.map(r=>`<tr>
-              <td style="font-weight:600">${catIcon(r.cat)} ${r.machineName||r.machineId}</td>
-              <td>${r.operator}</td>
-              <td style="color:var(--gray)">${r.date}</td>
-              <td style="color:var(--gray)">${r.time}</td>
-              <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono)">${fmtDuration(r.durationSec)}</td>
-              <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td>
-              <td>${validationBadge(r,'admin')}</td>
-              <td>${validationBadge(r,'chef')}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`:''}
-    </div>`;
-  }).join('');
-}
-function toggleWeekGroup(wk){
-  adminState.expandedWeek = (adminState.expandedWeek===wk) ? null : wk;
-  renderAdmin();
-}
- 
-function tryAdmin(){
-  const input=document.getElementById('admin-pass');
-  const val=input?input.value:adminState.pass;
-  if(val===ADMIN_CODE){adminState.locked=false;adminState.role='admin';renderAdmin();}
-  else if(val===CHEF_CODE){adminState.locked=false;adminState.role='chef';renderAdmin();}
-  else{const err=document.getElementById('admin-err');if(err)err.style.display='block';}
-}
-function lockAdmin(){adminState.locked=true;adminState.role=null;renderAdmin();}
-function toggleAddMachine(){adminState.addingMachine=!adminState.addingMachine;renderAdmin();}
-function toggleArchive(){adminState.showArchive=!adminState.showArchive;renderAdmin();}
-function addMachine(){
-  const name=document.getElementById('new-mname')?.value||adminState.newName;
-  if(!name.trim()){alert('Entrez un nom');return;}
-  const cats=Object.keys(APP.questions);
-  if(cats.length===0){alert('Créez d\'abord une famille de machines.');return;}
-  const cat=cats.includes(adminState.newCat)?adminState.newCat:cats[0];
-  adminState.newName='';adminState.addingMachine=false;
-  renderAdmin();
-  let id;
-  syncedWrite(()=>{
-    const prefix=cat.substring(0,2).toUpperCase();
-    const count=APP.machines.filter(m=>m.cat===cat).length+1;
-    id=`${prefix}-${String(count).padStart(2,'0')}`;
-    APP.machines.push({id,name:name.trim(),cat});
-  }).then(()=>{
-    renderAdmin();
-    showBC(id);
-  });
-}
-function addQuestion(cat){
-  const q=prompt(`Nouvelle question pour "${cat}" :`);
-  if(q&&q.trim()){
-    syncedWrite(()=>{ if(!APP.questions[cat]) APP.questions[cat]=[]; APP.questions[cat].push(q.trim()); }).then(renderAdmin);
-  }
-}
-function removeQ(cat,i){
-  if(confirm('Supprimer ce point de contrôle ?')){
-    syncedWrite(()=>{ APP.questions[cat].splice(i,1); }).then(renderAdmin);
-  }
-}
-function addOperator(cat){
-  const name=prompt(`Prénom du nouvel opérateur pour "${cat}" :`);
-  if(name&&name.trim()){
-    syncedWrite(()=>{ if(!APP.operators[cat]) APP.operators[cat]=[]; APP.operators[cat].push(name.trim()); }).then(renderAdmin);
-  }
-}
-function removeOperator(cat,i){
-  if(confirm('Supprimer cet opérateur ?')){
-    syncedWrite(()=>{ APP.operators[cat].splice(i,1); }).then(renderAdmin);
-  }
-}
- 
-// ════════════════════════════════════════════
-// SUPPRESSION / RÉAFFECTATION DE MACHINES
-// ════════════════════════════════════════════
-function deleteMachine(id){
-  const m=APP.machines.find(x=>x.id===id);
-  if(!m) return;
-  if(!confirm(`Supprimer définitivement "${m.name}" ? L'historique déjà archivé de cette machine sera conservé, mais elle disparaîtra du parc et du suivi de la semaine.`)) return;
-  syncedWrite(()=>{
-    APP.machines=APP.machines.filter(x=>x.id!==id);
-    delete APP.weekRecords[id];
-    if(APP.instructionSheets) delete APP.instructionSheets[id];
-  }).then(renderAdmin);
-}
-function changeMachineCat(id,newCat){
-  syncedWrite(()=>{
-    const m=APP.machines.find(x=>x.id===id);
-    if(m) m.cat=newCat;
-  }).then(renderAdmin);
-}
- 
-// ════════════════════════════════════════════
-// GESTION DES FAMILLES DE MACHINES (CATÉGORIES)
-// ════════════════════════════════════════════
-function addCategory(){
-  const name=prompt('Nom de la nouvelle famille de machines (ex: Perçage) :');
-  if(!name||!name.trim()) return;
-  const clean=name.trim();
-  if(APP.questions[clean]||APP.operators[clean]){ alert('Cette famille existe déjà.'); return; }
-  syncedWrite(()=>{
-    APP.questions[clean]=[];
-    APP.operators[clean]=[];
-  }).then(renderAdmin);
-}
-function renameCategory(oldCat){
-  const name=prompt(`Renommer la famille "${oldCat}" en :`, oldCat);
-  if(!name||!name.trim()) return;
-  const clean=name.trim();
-  if(clean===oldCat) return;
-  if(APP.questions[clean]||APP.operators[clean]){ alert('Une famille porte déjà ce nom.'); return; }
-  syncedWrite(()=>{
-    APP.questions[clean]=APP.questions[oldCat]||[];
-    APP.operators[clean]=APP.operators[oldCat]||[];
-    delete APP.questions[oldCat];
-    delete APP.operators[oldCat];
-    APP.machines.forEach(m=>{ if(m.cat===oldCat) m.cat=clean; });
-    if(adminState.newCat===oldCat) adminState.newCat=clean;
-  }).then(renderAdmin);
-}
-function deleteCategory(cat){
-  const inUse=APP.machines.some(m=>m.cat===cat);
-  if(inUse){ alert('Impossible : des machines sont encore rattachées à cette famille. Réassignez-les ou supprimez-les d\'abord.'); return; }
-  if(!confirm(`Supprimer la famille "${cat}" et ses questions/opérateurs associés ?`)) return;
-  syncedWrite(()=>{
-    delete APP.questions[cat];
-    delete APP.operators[cat];
-    if(adminState.newCat===cat){
-      const remaining=Object.keys(APP.questions);
-      adminState.newCat=remaining[0]||'';
-    }
-  }).then(renderAdmin);
-}
- 
-// ════════════════════════════════════════════
-// CODE-BARRES — un code-barres CODE128 par machine (encode l'ID machine)
-// ════════════════════════════════════════════
-function showBC(machineId){
-  const m=APP.machines.find(x=>x.id===machineId);
-  if(!m) return;
-  document.getElementById('bc-modal-title').textContent=m.name;
-  document.getElementById('bc-modal-sub').textContent=m.cat+' — '+m.id;
-  const canvas=document.getElementById('bc-canvas');
-  try{
-    JsBarcode(canvas, m.id, {
-      format:"CODE128",
-      lineColor:"#000",
-      width:2.6,
-      height:75,
-      displayValue:true,
-      fontSize:16,
-      margin:10
-    });
-    window.__lastBCDataUrl = canvas.toDataURL('image/png');
-    window.__lastBCName = m.name;
-  }catch(e){
-    window.__lastBCDataUrl=null;
-  }
-  document.getElementById('bc-modal').classList.add('open');
-}
-function downloadBC(){
-  if(!window.__lastBCDataUrl){alert('Code-barres non disponible');return;}
-  const a=document.createElement('a');
-  a.href=window.__lastBCDataUrl;
-  a.download='CODE-'+(window.__lastBCName||'machine')+'.png';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
- 
-// Miniatures de tous les codes-barres, affichées directement dans l'écran Admin
-function renderBCThumbGrid(){
-  const grid=document.getElementById('qr-thumb-grid');
-  if(!grid) return;
-  grid.innerHTML = APP.machines.map(m=>
-    `<div onclick="showBC('${m.id}')" style="cursor:pointer;background:#fff;border-radius:8px;padding:6px;text-align:center">
-      <canvas id="thumb-${m.id}"></canvas>
-    </div>`).join('');
-  APP.machines.forEach(m=>{
-    const c=document.getElementById('thumb-'+m.id);
-    if(!c) return;
-    try{
-      JsBarcode(c, m.id, { format:"CODE128", lineColor:"#000", width:1.4, height:36, displayValue:true, fontSize:10, margin:4 });
-    }catch(e){}
-  });
-}
- 
-// Imprime tous les codes-barres d'un coup, prêts à découper et plastifier
-function printAllBC(){
-  if(!APP.machines.length){ alert('Aucune machine à imprimer'); return; }
-  const w=window.open('', '_blank');
-  if(!w){ alert('Autorisez les pop-ups pour imprimer'); return; }
-  const cards=APP.machines.map(m=>{
-    const tmp=document.createElement('canvas');
-    try{
-      JsBarcode(tmp, m.id, { format:"CODE128", lineColor:"#000", width:2.2, height:65, displayValue:true, fontSize:14, margin:8 });
-    }catch(e){}
-    const src=tmp.toDataURL('image/png');
-    return `<div style="border:1px dashed #999;border-radius:6px;padding:10px;text-align:center;break-inside:avoid;margin-bottom:14px;display:inline-block">
-      <div style="font-family:Arial,sans-serif;font-weight:700;font-size:13px;margin-bottom:4px">${catIcon(m.cat)} ${m.name}</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#666;margin-bottom:8px">${m.cat}</div>
-      <img src="${src}" style="max-width:220px">
-    </div>`;
-  }).join('');
-  w.document.write(`<!DOCTYPE html><html><head><title>Codes-barres TPMConnect</title>
-    <style>
-      body{font-family:Arial,sans-serif;padding:20px}
-      .grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:flex-start}
-      @media print{ body{padding:0} }
-    </style></head>
-    <body><div class="grid">${cards}</div></body></html>`);
-  w.document.close();
-  setTimeout(()=>{ w.focus(); w.print(); }, 400);
-}
- 
-function closeBC(){document.getElementById('bc-modal').classList.remove('open');}
-document.getElementById('bc-modal').addEventListener('click',function(e){if(e.target===this)closeBC();});
-document.getElementById('startup-modal').addEventListener('click',function(e){if(e.target===this)closeStartup(false);});
- 
-// ════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════
-rolloverWeekIfNeeded();
-renderOperator();
-fetchFromSheet();
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-if(getParam('machine')){
-  setTimeout(()=>{
-    const sel=document.getElementById('op-name-select');
-    if(sel){sel.scrollIntoView({behavior:'smooth',block:'center'});sel.focus();}
-  },100);
-}
-</script>
 
-<!-- Sélecteur de fichier pour choisir le PDF (Admin) — seul le NOM du fichier est utilisé, jamais son contenu -->
-<input type="file" id="instr-file-input" accept="application/pdf,.pdf" style="display:none" onchange="onInstructionFileSelected(this)">
+                <div class="admin-actions-bar">
+                    <button class="btn-declencher-form" onclick="basculerForm()">AJOUTER UN NOUVEL OUTILLAGE</button>
+                    <button id="btnDownloadFinal" class="btn-download-final" onclick="telechargerNouveauFichier()">💾 TÉLÉCHARGER LA VERSION FINALE</button>
+                </div>
+
+                <div id="formAjout" class="form-ajout">
+                    <div class="form-group">
+                        <label>RÉFÉRENCE OUTIL</label>
+                        <input type="text" id="newRef" placeholder="EX: SEM420">
+                    </div>
+                    <div class="form-group">
+                        <label>DÉSIGNATION</label>
+                        <input type="text" id="newNom" value="FICHE DE PARAMÈTRE EMBOUTISSAGE">
+                    </div>
+                    <div class="form-group">
+                        <label>SÉLECTIONNER LE DOCUMENT PDF RÉEL</label>
+                        <div class="file-input-wrapper">
+                            <label for="newFichier" class="btn-file-select">📁 CHOISIR LE FICHIER PDF SUR LE RÉSEAU</label>
+                            <input type="file" id="newFichier" accept=".pdf" style="display:none;" onchange="afficherNomFichier()">
+                            <span id="filePreview" class="file-name-preview" style="color: #666666;">AUCUN FICHIER SÉLECTIONNÉ</span>
+                        </div>
+                    </div>
+                    <button class="btn-valider" onclick="ajouterFiche()">VALIDER L'AJOUT (ÉCRAN)</button>
+                </div>
+            </div>
+        </section>
+        
+        <main class="results-grid" id="toolsGrid">
+            </main>
+    </div>
+
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>ACCÈS MODIFICATION</h3>
+            <p>VEUILLEZ SAISIR LE CODE RESPONSABLE POUR MODIFIER LES OUTILLAGES</p>
+            <input type="password" id="authCodeInput" class="modal-input" placeholder="••••">
+            <div class="modal-buttons">
+                <button class="btn-modal-confirm" onclick="validerCodeAuth()">VALIDER</button>
+                <button class="btn-modal-cancel" onclick="fermerModalAuth()">ANNULER</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CODE_ADMIN_HASH = "1949";
+        let isAdmin = false;
+        let modifEnCours = false;
+
+        // BASE DE DONNÉES STRICTEMENT LIMITÉE À VOTRE LISTE DEMANDÉE
+        let fichesUsine = [
+            { "ref": "SEM047", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM047.pdf" },
+            { "ref": "SEM116", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM116.pdf" },
+            { "ref": "SEM117", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM117.pdf" },
+            { "ref": "SEM117-7", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM117-7.pdf" },
+            { "ref": "SEM126-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM126-1P1.pdf" },
+            { "ref": "SEM126-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM126-1P2.pdf" },
+            { "ref": "SEM126-1P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM126-1P3.pdf" },
+            { "ref": "SEM126-1P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM126-1P4.pdf" },
+            { "ref": "SEM135P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM135P1.pdf" },
+            { "ref": "SEM135P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM135P2.pdf" },
+            { "ref": "SEM1480-3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1480-3.pdf" },
+            { "ref": "SEM1493-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1493-1.pdf" },
+            { "ref": "SEM1496", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1496.pdf" },
+            { "ref": "SEM1513", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1513.pdf" },
+            { "ref": "SEM1513-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1513-1P1.pdf" },
+            { "ref": "SEM155-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM155-1P1.pdf" },
+            { "ref": "SEM155-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM155-1P2.pdf" },
+            { "ref": "SEM1606", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1606.pdf" },
+            { "ref": "SEM1621", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1621.pdf" },
+            { "ref": "SEM1635", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1635.pdf" },
+            { "ref": "SEM1674", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1674.pdf" },
+            { "ref": "SEM178-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM178-1P1.pdf" },
+            { "ref": "SEM178-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM178-1P2.pdf" },
+            { "ref": "SEM1932", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1932.pdf" },
+            { "ref": "SEM2035-P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2035-P1.pdf" },
+            { "ref": "SEM2035-P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2035-P2.pdf" },
+            { "ref": "SEM2080-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2080-1.pdf" },
+            { "ref": "SEM2080-2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2080-2.pdf" },
+            { "ref": "SEM2130-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-1.pdf" },
+            { "ref": "SEM2130-1#IND-", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-1#IND-.pdf" },
+            { "ref": "SEM2130-2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-2.pdf" },
+            { "ref": "SEM2130-2#IND-", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-2#IND-.pdf" },
+            { "ref": "SEM2130-3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-3.pdf" },
+            { "ref": "SEM2130-3#IND-", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-3#IND-.pdf" },
+            { "ref": "SEM2130-4#IND-", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2130-4#IND-.pdf" },
+            { "ref": "SEM2273-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2273-1.pdf" },
+            { "ref": "SEM2303", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2303.pdf" },
+            { "ref": "SEM2303 (1)", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2303 (1).pdf" },
+            { "ref": "SEM2303 (2)", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2303 (2).pdf" },
+            { "ref": "SEM2614-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2614-1.pdf" },
+            { "ref": "SEM2728P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2728P1.pdf" },
+            { "ref": "SEM2728P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2728P2.pdf" },
+            { "ref": "SEM2728P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2728P3.pdf" },
+            { "ref": "SEM2794-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2794-1.pdf" },
+            { "ref": "SEM2794-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2794-1P1.pdf" },
+            { "ref": "SEM2794-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2794-1P2.pdf" },
+            { "ref": "SEM2794-1P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2794-1P3.pdf" },
+            { "ref": "SEM2795-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2795-1P1.pdf" },
+            { "ref": "SEM2795-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2795-1P2.pdf" },
+            { "ref": "SEM2795-1P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2795-1P3.pdf" },
+            { "ref": "SEM2795-1P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2795-1P4.pdf" },
+            { "ref": "SEM2796-S03-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2796-S03-1.pdf" },
+            { "ref": "SEM2814-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2814-1P1.pdf" },
+            { "ref": "SEM2814-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2814-1P2.pdf" },
+            { "ref": "SEM2814-2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2814-2.pdf" },
+            { "ref": "SEM291-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM291-1P1.pdf" },
+            { "ref": "SEM291-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM291-1P2.pdf" },
+            { "ref": "SEM2980-S01-PH40", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2980-S01-PH40.pdf" },
+            { "ref": "SEM2980-S01-PH70", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2980-S01-PH70.pdf" },
+            { "ref": "SEM2980-S01-PH100", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2980-S01-PH100.pdf" },
+            { "ref": "SEM2982-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2982-1P1.pdf" },
+            { "ref": "SEM2982-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2982-1P2.pdf" },
+            { "ref": "SEM2982-1P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2982-1P3.pdf" },
+            { "ref": "SEM2982-1P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM2982-1P4.pdf" },
+            { "ref": "SEM3005-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3005-1P1.pdf" },
+            { "ref": "SEM3005-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3005-1P2.pdf" },
+            { "ref": "SEM301P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM301P1.pdf" },
+            { "ref": "SEM301P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM301P2.pdf" },
+            { "ref": "SEM301P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM301P3.pdf" },
+            { "ref": "SEM301P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM301P4.pdf" },
+            { "ref": "SEM3052-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3052-1.pdf" },
+            { "ref": "SEM3058-PH30", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3058-PH30.pdf" },
+            { "ref": "SEM311P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM311P1.pdf" },
+            { "ref": "SEM311P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM311P2.pdf" },
+            { "ref": "SEM313P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM313P1.pdf" },
+            { "ref": "SEM313P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM313P2.pdf" },
+            { "ref": "SEM313P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM313P3.pdf" },
+            { "ref": "SEM3174-1PH30", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3174-1PH30.pdf" },
+            { "ref": "SEM3188-1P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3188-1P1.pdf" },
+            { "ref": "SEM3188-1P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM3188-1P2.pdf" },
+            { "ref": "SEM436", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM436.pdf" },
+            { "ref": "SEM739", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM739.pdf" },
+            { "ref": "SEM802P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM802P1.pdf" },
+            { "ref": "SEM802P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM802P2.pdf" },
+            { "ref": "SEM802P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM802P3.pdf" },
+            { "ref": "SEM802P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM802P4.pdf" },
+            { "ref": "SEM1008-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1008-1.pdf" },
+            { "ref": "SEM1050P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1050P1.pdf" },
+            { "ref": "SEM1050P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1050P2.pdf" },
+            { "ref": "SEM1050P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1050P3.pdf" },
+            { "ref": "SEM1050P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1050P4.pdf" },
+            { "ref": "SEM1053-P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1053-P1.pdf" },
+            { "ref": "SEM1053-P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1053-P2.pdf" },
+            { "ref": "SEM1053-P3", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1053-P3.pdf" },
+            { "ref": "SEM1053-P4", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1053-P4.pdf" },
+            { "ref": "SEM1053-P5", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1053-P5.pdf" },
+            { "ref": "SEM1053-P6", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1053-P6.pdf" },
+            { "ref": "SEM1054-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1054-1.pdf" },
+            { "ref": "SEM1056-7", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1056-7.pdf" },
+            { "ref": "SEM1056P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1056P1.pdf" },
+            { "ref": "SEM1056P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1056P2.pdf" },
+            { "ref": "SEM1065-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1065-1.pdf" },
+            { "ref": "SEM1078-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1078-1.pdf" },
+            { "ref": "SEM1080P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1080P1.pdf" },
+            { "ref": "SEM1080P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1080P2.pdf" },
+            { "ref": "SEM1103-1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1103-1.pdf" },
+            { "ref": "SEM1103-2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1103-2.pdf" },
+            { "ref": "SEM1136-1137", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1136-1137.pdf" },
+            { "ref": "SEM1137P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1137P1.pdf" },
+            { "ref": "SEM1137P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1137P2.pdf" },
+            { "ref": "SEM1296P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1296P1.pdf" },
+            { "ref": "SEM1296P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1296P2.pdf" },
+            { "ref": "SEM1299P1", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1299P1.pdf" },
+            { "ref": "SEM1299P2", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1299P2.pdf" },
+            { "ref": "SEM1341", "nom": "FICHE DE PARAMÈTRE EMBOUTISSAGE", "lien": "FPPH_SEM1341.pdf" }
+        ];
+
+        window.addEventListener("DOMContentLoaded", () => {
+            fichesUsine.sort((a, b) => a.ref.localeCompare(b.ref, undefined, { numeric: true, sensitivity: 'base' }));
+            maj();
+            
+            window.addEventListener("beforeunload", (e) => {
+                if (modifEnCours) {
+                    e.preventDefault();
+                    e.returnValue = "ATTENTION : VOUS AVEZ DES MODIFICATIONS NON SAUVEGARDÉES !";
+                }
+            });
+        });
+
+        function customAlert(titre, message, callback = null) {
+            const tempOverlay = document.createElement("div");
+            tempOverlay.className = "modal-overlay";
+            tempOverlay.style.display = "flex";
+            
+            const tempBox = document.createElement("div");
+            tempBox.className = "modal-box";
+            tempBox.style.maxWidth = "550px";
+            
+            const t = document.createElement("h3");
+            t.innerText = titre;
+            
+            const p = document.createElement("p");
+            p.style.whiteSpace = "pre-line";
+            p.style.textAlign = "left";
+            p.innerText = message;
+            
+            const btn = document.createElement("button");
+            btn.className = "btn-modal-confirm";
+            btn.innerText = "COMPRIS";
+            btn.onclick = () => {
+                document.body.removeChild(tempOverlay);
+                if(callback) callback();
+            };
+            
+            tempBox.appendChild(t);
+            tempBox.appendChild(p);
+            tempBox.appendChild(btn);
+            tempOverlay.appendChild(tempBox);
+            document.body.appendChild(tempOverlay);
+        }
+
+        function customConfirm(titre, message, onConfirm) {
+            const tempOverlay = document.createElement("div");
+            tempOverlay.className = "modal-overlay";
+            tempOverlay.style.display = "flex";
+            
+            const tempBox = document.createElement("div");
+            tempBox.className = "modal-box";
+            
+            const t = document.createElement("h3");
+            t.innerText = titre;
+            
+            const p = document.createElement("p");
+            p.style.whiteSpace = "pre-line";
+            p.innerText = message;
+            
+            const divBtns = document.createElement("div");
+            divBtns.className = "modal-buttons";
+            
+            const btnConf = document.createElement("button");
+            btnConf.className = "btn-modal-confirm";
+            btnConf.innerText = "OUI, SUPPRIMER";
+            btnConf.onclick = () => {
+                document.body.removeChild(tempOverlay);
+                onConfirm();
+            };
+            
+            const btnCancel = document.createElement("button");
+            btnCancel.className = "btn-modal-cancel";
+            btnCancel.innerText = "ANNULER";
+            btnCancel.onclick = () => {
+                document.body.removeChild(tempOverlay);
+            };
+            
+            divBtns.appendChild(btnConf);
+            divBtns.appendChild(btnCancel);
+            tempBox.appendChild(t);
+            tempBox.appendChild(p);
+            tempBox.appendChild(divBtns);
+            tempOverlay.appendChild(tempBox);
+            document.body.appendChild(tempOverlay);
+        }
+
+        function ouvrirModalAuth() {
+            if (isAdmin) {
+                isAdmin = false;
+                document.getElementById("btnAdminAuth").innerText = "CONNEXION RESPONSABLE";
+                document.getElementById("btnAdminAuth").classList.remove("active");
+                document.getElementById("adminZone").style.display = "none";
+                document.getElementById("statusDot").style.backgroundColor = "#555555";
+                document.getElementById("statusDot").style.animation = "none";
+                document.getElementById("statusText").innerText = "MODE CONSULTATION SIMPLE";
+                document.getElementById("statusText").style.color = "#FFFFFF";
+                maj();
+            } else {
+                document.getElementById("authModal").style.display = "flex";
+                document.getElementById("authCodeInput").focus();
+            }
+        }
+
+        function fermerModalAuth() {
+            document.getElementById("authModal").style.display = "none";
+            document.getElementById("authCodeInput").value = "";
+        }
+
+        function validerCodeAuth() {
+            const val = document.getElementById("authCodeInput").value;
+            if (val === CODE_ADMIN_HASH) {
+                isAdmin = true;
+                document.getElementById("btnAdminAuth").innerText = "QUITTER SESSION";
+                document.getElementById("btnAdminAuth").classList.add("active");
+                document.getElementById("adminZone").style.display = "block";
+                document.getElementById("statusDot").style.backgroundColor = "var(--liebherr-yellow)";
+                document.getElementById("statusDot").style.animation = "pulse-admin 1.2s infinite";
+                document.getElementById("statusText").innerText = "MODE RESPONSABLE ACTIF";
+                document.getElementById("statusText").style.color = "var(--liebherr-yellow)";
+                fermerModalAuth();
+                maj();
+                customAlert("ACCÈS ACCORDÉ", "VOUS POUVEZ MAINTENANT AJOUTER OU SUPPRIMER DES OUTILLAGES.\n\nN'OUBLIEZ PAS DE TÉLÉCHARGER LA VERSION FINALE APRÈS VOS MODIFICATIONS.");
+            } else {
+                alert("CODE RESPONSABLE INCORRECT");
+                document.getElementById("authCodeInput").value = "";
+                document.getElementById("authCodeInput").focus();
+            }
+        }
+
+        function maj() {
+            const grid = document.getElementById("toolsGrid");
+            grid.innerHTML = "";
+
+            fichesUsine.forEach(outil => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.setAttribute("data-ref", outil.ref.toLowerCase());
+
+                const topDiv = document.createElement("div");
+                const h3 = document.createElement("h3");
+                h3.innerText = outil.ref;
+                const p = document.createElement("p");
+                p.innerText = outil.nom;
+                topDiv.appendChild(h3);
+                topDiv.appendChild(p);
+
+                const botDiv = document.createElement("div");
+                const aLink = document.createElement("a");
+                aLink.href = outil.lien;
+                aLink.target = "_blank";
+                aLink.className = "btn-open";
+                aLink.innerText = "VISUALISER PDF";
+                botDiv.appendChild(aLink);
+
+                if (isAdmin) {
+                    const btnDel = document.createElement("button");
+                    btnDel.className = "btn-delete";
+                    btnDel.style.display = "block";
+                    btnDel.innerText = "SUPPRIMER L'ÉLÉMENT";
+                    btnDel.onclick = () => suppr(outil.ref);
+                    botDiv.appendChild(btnDel);
+                }
+
+                card.appendChild(topDiv);
+                card.appendChild(botDiv);
+                grid.appendChild(card);
+            });
+
+            if (isAdmin && modifEnCours) {
+                document.getElementById("btnDownloadFinal").style.display = "inline-block";
+            } else {
+                document.getElementById("btnDownloadFinal").style.display = "none";
+            }
+
+            filtrerOutils();
+        }
+
+        function filtrerOutils() {
+            const val = document.getElementById("searchInput").value.trim().toLowerCase();
+            const cards = document.querySelectorAll(".card");
+            cards.forEach(card => {
+                const ref = card.getAttribute("data-ref");
+                if (ref.includes(val)) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        function basculerForm() {
+            const f = document.getElementById("formAjout");
+            f.style.display = (f.style.display === "block" ? "none" : "block");
+        }
+
+        function afficherNomFichier() {
+            const f = document.getElementById("newFichier");
+            const preview = document.getElementById("filePreview");
+            if (f.files && f.files.length > 0) {
+                preview.innerText = f.files[0].name.toUpperCase();
+                preview.style.color = "#000000";
+            } else {
+                preview.innerText = "AUCUN FICHIER SÉLECTIONNÉ";
+                preview.style.color = "#666666";
+            }
+        }
+
+        function ajouterFiche() {
+            const refInput = document.getElementById("newRef").value.trim().toUpperCase();
+            const nomInput = document.getElementById("newNom").value.trim().toUpperCase();
+            const fileInput = document.getElementById("newFichier");
+
+            if (!refInput) { alert("VEUILLEZ REMPLIR LA RÉFÉRENCE DE L'OUTIL."); return; }
+            if (!nomInput) { alert("VEUILLEZ REMPLIR LA DÉSIGNATION."); return; }
+            if (!fileInput.files || fileInput.files.length === 0) { alert("VEUILLEZ SÉLECTIONNER LE FICHIER PDF ASSOCIÉ."); return; }
+
+            const nomFichierPdf = fileInput.files[0].name;
+
+            const existe = fichesUsine.some(o => o.ref.toUpperCase() === refInput);
+            if (existe) {
+                alert(`L'OUTILLAGE ${refInput} EXISTE DÉJÀ DANS LA BASE !`);
+                return;
+            }
+
+            fichesUsine.push({
+                "ref": refInput,
+                "nom": nomInput,
+                "lien": nomFichierPdf
+            });
+
+            fichesUsine.sort((a, b) => a.ref.localeCompare(b.ref, undefined, { numeric: true, sensitivity: 'base' }));
+
+            modifEnCours = true;
+            maj();
+
+            document.getElementById("newRef").value = "";
+            document.getElementById("newFichier").value = "";
+            document.getElementById("filePreview").innerText = "AUCUN FICHIER SÉLECTIONNÉ";
+            document.getElementById("filePreview").style.color = "#666666";
+            document.getElementById("formAjout").style.display = "none";
+
+            customAlert("AJOUT AVEC SUCCÈS", `L'OUTILLAGE ${refInput} A ÉTÉ INTÉGRÉ À L'ÉCRAN.\n\n⚠️ IMPORTANT : POUR QUE CET AJOUT RESTE DÉFINITIF, VOUS DEVEZ APPUYER SUR LE BOUTON JAUNE 'TÉLÉCHARGER LA VERSION FINALE'.`);
+        }
+
+        function suppr(reference) {
+            customConfirm("CONFIRMATION DE SUPPRESSION", `VOULEZ-VOUS VRAIMENT RETIRER L'OUTILLAGE ${reference} DE L'APPLICATION ?`, () => {
+                fichesUsine = fichesUsine.filter(o => o.ref.toUpperCase() !== reference.toUpperCase());
+                modifEnCours = true;
+                maj();
+                customAlert("ÉLÉMENT RETIRÉ", `L'OUTILLAGE ${reference} A ÉTÉ ENLEVÉ.\n\nN'OUBLIEZ PAS DE TÉLÉCHARGER LA VERSION FINALE POUR APPLIQUER CELA.`);
+            });
+        }
+
+        function telechargerNouveauFichier() {
+            let codeComplet = document.documentElement.outerHTML;
+            const debut = codeComplet.indexOf("let fichesUsine = [");
+            const fin = codeComplet.indexOf("];", debut) + 2;
+            
+            const nouvelleListe = "let fichesUsine = " + JSON.stringify(fichesUsine, null, 12) + ";";
+            let nouveauContenu = codeComplet.substring(0, debut) + nouvelleListe + codeComplet.substring(fin);
+            nouveauContenu = "<!DOCTYPE html>\n" + nouveauContenu;
+
+            const blob = new Blob([nouveauContenu], { type: "text/html;charset=utf-8" });
+            const lien = document.createElement("a");
+            lien.href = URL.createObjectURL(blob);
+            lien.download = "EBTSG.html"; 
+            document.body.appendChild(lien);
+            lien.click();
+            document.body.removeChild(lien);
+
+            modifEnCours = false;
+            
+            customAlert("💾 TÉLÉCHARGEMENT RÉUSSI", 
+                "LE NOUVEAU FICHIER INTERACTIF 'EBTSG.HTML' EST DANS VOTRE DOSSIER 'TÉLÉCHARGEMENTS'.\n\n" +
+                "PROCÉDURE POUR LE METTRE EN SERVICE REQUIS :\n\n" +
+                "1. ALLES DANS LE DOSSIER DU RÉSEAU OÙ SE TROUVE L'APPLICATION.\n" +
+                "2. RENOMMEZ L'ANCIEN FICHIER EN LUI METTANT LA DATE (EX: EBTSG_OLD.HTML) ET DÉPLACEZ-LE DANS LE DOSSIER 'ARCHIVES'.\n" +
+                "3. COPIEZ VOTRE NOUVEAU FICHIER DEPUIS VOS TÉLÉCHARGEMENTS ET METTEZ-LE DANS LE DOSSIER RÉSEAU.\n\n" +
+                "⚠️ ATTENTION : LE NOUVEAU FICHIER DOIT RESTER NOMMÉ EXACTEMENT 'EBTSG.HTML' POUR FONCTIONNER.");
+        }
+    </script>
 </body>
 </html>
