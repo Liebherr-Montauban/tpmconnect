@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -182,6 +181,36 @@ option{background:var(--bg3)}
 .week-group-head:hover{background:var(--bg4)}
 .week-group-title{font-family:var(--font-head);font-size:17px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.3px}
 .week-group-body{padding:0 4px}
+
+/* ═══════════════════════════════════════
+   ADAPTATION PETITS ÉCRANS (téléphone)
+   ═══════════════════════════════════════ */
+@media (max-width: 480px){
+  html,body{font-size:15px}
+  .view{padding:12px;padding-bottom:50px}
+  .topbar{padding:0 10px;height:60px}
+  .logo{font-size:19px}
+  .logo-dot{width:14px;height:14px}
+  .sync-indicator span{display:none} /* garde juste le point coloré, texte trop long sinon */
+  .topbar-tab{padding:6px 8px;font-size:10px}
+  .topbar-tab svg{width:20px;height:20px}
+  .card{padding:14px;border-radius:12px}
+  .section-title{font-size:21px}
+  .machine-header h2{font-size:22px}
+  select,input[type=text],input[type=password]{padding:12px 14px;font-size:15px}
+  .btn{padding:14px 16px;font-size:14px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+  .stats-row .stat-card:last-child{grid-column:span 2}
+  .stat-num{font-size:26px}
+  .machine-grid{grid-template-columns:1fr}
+  .check-row{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 0}
+  .radio-pair{width:100%}
+  .radio-btn{flex:1}
+  .machine-header{padding:14px;flex-wrap:wrap}
+  .tbl{font-size:13px}
+  .tbl th,.tbl td{padding:8px 6px}
+  .modal-box{padding:18px}
+}
  
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -612,6 +641,13 @@ let opState = {
 function getCat(id){ const m=APP.machines.find(x=>x.id===id); return m?m.cat:null; }
 function getMachineName(id){ const m=APP.machines.find(x=>x.id===id); return m?m.name:id; }
 function getRecord(id){ return APP.weekRecords[id]||null; }
+
+// Une machine n'est "en anomalie" pour le tableau de bord que si une anomalie
+// de la semaine en cours existe encore et n'a PAS été marquée résolue —
+// contrairement à record.anomaly qui reste figé à vrai même après résolution.
+function hasOpenAnomalyThisWeek(machineId){
+  return (APP.anomalies||[]).some(a=>a.machineId===machineId && a.weekKey===APP.weekKey && a.status!=='resolue');
+}
  
 // ════════════════════════════════════════════
 // FICHES D'INSTRUCTION — PDF par machine (référence par nom de fichier)
@@ -875,6 +911,7 @@ function submitTPM(){
       APP.anomalies.push({
         id: machineId+'-'+Date.now(),
         machineId, machineName:getMachineName(machineId),
+        weekKey:APP.weekKey,
         reportedDate:today(), reportedTime:nowTime(), reportedBy:operatorName,
         status:'signalee', // 'signalee' | 'en_cours' | 'resolue'
         resolvedBy:null, resolvedDate:null, notes:''
@@ -899,7 +936,7 @@ function renderDashboard(){
   const c=document.getElementById('db-content');
   const machines=APP.machines, records=APP.weekRecords;
   const done=machines.filter(m=>records[m.id]).length;
-  const issues=machines.filter(m=>records[m.id]&&records[m.id].anomaly).length;
+  const issues=machines.filter(m=>records[m.id]&&hasOpenAnomalyThisWeek(m.id)).length;
   const pct=machines.length?Math.round(done/machines.length*100):0;
   const now=nowTime();
   const urgent=isUrgentPeriod();
@@ -923,11 +960,11 @@ function renderDashboard(){
  
   ${issues>0?`<div class="alert-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <div><strong>${issues} anomalie${issues>1?'s':''} signalée${issues>1?'s':''}</strong><br>
-    ${machines.filter(m=>records[m.id]&&records[m.id].anomaly).map(m=>`${m.name}`).join(' · ')}</div>
+    <div><strong>${issues} anomalie${issues>1?'s':''} non résolue${issues>1?'s':''} cette semaine</strong><br>
+    ${machines.filter(m=>records[m.id]&&hasOpenAnomalyThisWeek(m.id)).map(m=>`${m.name}`).join(' · ')}</div>
   </div>`:''}
  
-  ${openAnomalies.length>0?`<div class="warn-banner">
+  ${openAnomalies.length>issues?`<div class="warn-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <span><strong>${openAnomalies.length} anomalie${openAnomalies.length>1?'s':''} non résolue${openAnomalies.length>1?'s':''}</strong> au total (toutes semaines confondues) — voir l'onglet Admin pour le suivi</span>
   </div>`:''}
@@ -945,11 +982,12 @@ function renderDashboard(){
   <div class="machine-grid">
     ${machines.map(m=>{
       const r=records[m.id];
-      const cls = r?(r.anomaly?'issue':'done') : (urgent?'urgent':'');
+      const openIssue = r && hasOpenAnomalyThisWeek(m.id);
+      const cls = r?(openIssue?'issue':'done') : (urgent?'urgent':'');
       return `<div class="machine-tile ${cls}">
         <div class="tile-name">${catIcon(m.cat)} ${m.name}</div>
         <div style="margin-bottom:5px"><span class="badge badge-gray">${m.cat}</span></div>
-        ${r?`<div class="tile-info"><span class="dot ${r.anomaly?'dot-red':'dot-green'}"></span> ${r.anomaly?'Anomalie':'Validé'}</div>
+        ${r?`<div class="tile-info"><span class="dot ${openIssue?'dot-red':'dot-green'}"></span> ${openIssue?'Anomalie':(r.anomaly?'Anomalie résolue':'Validé')}</div>
         <div class="tile-info" style="margin-top:2px">${r.operator} · ${r.time}</div>`
         :`<div class="tile-info"><span class="dot ${urgent?'dot-orange':'dot-gray'}"></span> En attente</div>`}
       </div>`;
@@ -967,7 +1005,7 @@ function renderDashboard(){
           <td style="color:var(--gray)">${r.date}</td>
           <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${r.time}</td>
           <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${fmtDuration(r.durationSec)}</td>
-          <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td></tr>`;
+          <td>${hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">OK</span>`)}</td></tr>`;
         }).join('')}
       </tbody>
     </table>
@@ -1106,7 +1144,7 @@ function renderChefView(c){
         ${APP.machines.map(m=>{
           const r=APP.weekRecords[m.id];
           let statusCell;
-          if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
+          if(r) statusCell = hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">Fait</span>`);
           else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
           return `<tr>
             <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
@@ -1177,7 +1215,7 @@ function renderAdmin(){
         ${APP.machines.map(m=>{
           const r=APP.weekRecords[m.id];
           let statusCell;
-          if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
+          if(r) statusCell = hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">Fait</span>`);
           else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
           return `<tr>
             <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
