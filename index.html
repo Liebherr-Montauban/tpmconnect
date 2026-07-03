@@ -149,6 +149,9 @@ option{background:var(--bg3)}
 .tbl-fixed td{overflow:hidden}
 .cell-clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%}
 .cell-wrap{overflow-wrap:break-word;word-break:break-word}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-wrap::-webkit-scrollbar{height:6px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
  
 .success-screen{text-align:center;padding:56px 26px}
 .success-icon{width:92px;height:92px;background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
@@ -161,7 +164,7 @@ option{background:var(--bg3)}
  
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center;max-height:90vh;overflow-y:auto}
 .modal-box.wide{max-width:520px;text-align:left}
  
 .section-title{font-family:var(--font-head);font-size:28px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;color:#fff}
@@ -207,9 +210,21 @@ option{background:var(--bg3)}
   .radio-pair{width:100%}
   .radio-btn{flex:1}
   .machine-header{padding:14px;flex-wrap:wrap}
-  .tbl{font-size:13px}
-  .tbl th,.tbl td{padding:8px 6px}
-  .modal-box{padding:18px}
+
+  /* Tableaux : au lieu de s'écraser, ils défilent horizontalement.
+     Le scroll s'étend jusqu'aux bords de la carte, et une largeur mini
+     par tableau garantit que le texte reste lisible plutôt que compressé. */
+  .tbl-wrap{margin:0 -14px;padding:0 14px}
+  .tbl{font-size:13px;min-width:560px}
+  .tbl th,.tbl td{padding:8px 9px;white-space:nowrap}
+
+  .modal-box{padding:18px;max-width:calc(100vw - 32px)}
+  .modal-box.wide{max-width:calc(100vw - 32px)}
+  #bc-modal-inner{max-width:100%}
+  #bc-modal-inner canvas{max-width:100%;height:auto}
+
+  .week-group-head{padding:12px}
+  .week-group-title{font-size:14px}
 }
  
 </style>
@@ -996,7 +1011,7 @@ function renderDashboard(){
  
   ${done>0?`<div class="card">
     <div class="card-title">Récapitulatif de la semaine</div>
-    <table class="tbl">
+    <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th></tr></thead>
       <tbody>
         ${machines.filter(m=>records[m.id]).map(m=>{
@@ -1008,7 +1023,7 @@ function renderDashboard(){
           <td>${hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">OK</span>`)}</td></tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table></div>
   </div>`:`<div style="text-align:center;padding:28px 20px;color:var(--gray);font-size:13px">
     Aucune TPM validée pour l'instant cette semaine.
   </div>`}`;
@@ -1051,7 +1066,7 @@ function renderAnomaliesCard(){
   return `<div class="card" style="border-color:${open.length>0?'rgba(232,64,64,.3)':'var(--border)'}">
     <div class="card-title">Suivi des anomalies (${open.length} ouverte${open.length>1?'s':''})</div>
     ${list.length===0?`<p style="font-size:15px;color:var(--gray)">Aucune anomalie enregistrée pour l'instant.</p>`:`
-    <table class="tbl">
+    <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Machine</th><th>Signalée le</th><th>Par</th><th>Statut</th><th>Action</th></tr></thead>
       <tbody>
         ${list.map(a=>`
@@ -1067,7 +1082,7 @@ function renderAnomaliesCard(){
             </td>
           </tr>`).join('')}
       </tbody>
-    </table>`}
+    </table></div>`}
   </div>`;
 }
  
@@ -1138,7 +1153,7 @@ function renderChefView(c){
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui a validé</div>
-    <table class="tbl">
+    <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
       <tbody>
         ${APP.machines.map(m=>{
@@ -1156,7 +1171,7 @@ function renderChefView(c){
           </tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table></div>
     <div class="hint">Vous validez en tant que Chef d'atelier. La colonne "Validation Admin" reflète en temps réel la validation de l'administrateur.</div>
   </div>`;
 }
@@ -1209,7 +1224,7 @@ function renderAdmin(){
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
-    <table class="tbl">
+    <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Durée</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
       <tbody>
         ${APP.machines.map(m=>{
@@ -1228,7 +1243,7 @@ function renderAdmin(){
           </tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table></div>
     <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier.</div>
   </div>
  
@@ -1237,7 +1252,7 @@ function renderAdmin(){
       <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
       <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
     </div>
-    <table class="tbl">
+    <div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
       <tbody>
         ${cats.map(cat=>{
@@ -1254,7 +1269,7 @@ function renderAdmin(){
           </tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table></div>
     <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
   </div>
  
@@ -1381,7 +1396,7 @@ function renderArchiveByWeek(){
         <span style="font-size:20px;color:var(--gray);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .15s">▾</span>
       </div>
       ${isOpen?`<div class="week-group-body">
-        <table class="tbl">
+        <div class="tbl-wrap"><table class="tbl">
           <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th><th>Val. Admin</th><th>Val. Chef</th></tr></thead>
           <tbody>
             ${records.map(r=>`<tr>
@@ -1395,7 +1410,7 @@ function renderArchiveByWeek(){
               <td>${validationBadge(r,'chef')}</td>
             </tr>`).join('')}
           </tbody>
-        </table>
+        </table></div>
       </div>`:''}
     </div>`;
   }).join('');
