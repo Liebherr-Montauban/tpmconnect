@@ -175,6 +175,9 @@ option{background:var(--bg3)}
 .week-group-head:hover{background:var(--bg4)}
 .week-group-title{font-family:var(--font-head);font-size:17px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.3px}
 .week-group-body{padding:0 4px}
+.chk-row{display:flex;align-items:center;gap:9px;padding:8px 0}
+.chk-row input{width:18px;height:18px;flex-shrink:0;accent-color:var(--yellow)}
+.chk-row label{font-size:15px;color:var(--text);cursor:pointer}
  
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -321,11 +324,8 @@ function defaultData(){
     weekKey: currentWeekKey(),
     weekRecords:{},    // { machineId: record } pour la semaine en cours
     instructionSheets:{}, // { machineId: {fileName, addedAt} } — le PDF lui-même vit à côté du fichier HTML
-    anomalies:[],     // liste de toutes les anomalies signalées (ouvertes + résolues), jamais supprimée
-    supervisors:[      // comptes nominatifs Admin / Chef d'atelier — chacun son nom + son code
-      {id:'admin-1', name:'Administrateur', role:'admin', code:'1234'},
-      {id:'chef-1', name:"Chef d'atelier", role:'chef', code:'4321'}
-    ]
+    anomalies:[],      // liste de toutes les anomalies signalées (ouvertes + résolues), jamais supprimée
+    chefAccounts:[]    // { id, name, code, sectors:[cat,...] } — comptes Chef d'atelier, limités par secteur
   };
 }
  
@@ -373,10 +373,7 @@ async function fetchFromSheet(){
         if(!APP.weekRecords) APP.weekRecords = {};
         if(!APP.instructionSheets) APP.instructionSheets = {};
         if(!APP.anomalies) APP.anomalies = [];
-        if(!APP.supervisors) APP.supervisors = [
-          {id:'admin-1', name:'Administrateur', role:'admin', code:'1234'},
-          {id:'chef-1', name:"Chef d'atelier", role:'chef', code:'4321'}
-        ];
+        if(!APP.chefAccounts) APP.chefAccounts = [];
         rolloverWeekIfNeeded();
         lastKnownJSON = newJSON;
         initialSyncDone = true;
@@ -981,11 +978,15 @@ function renderDashboard(){
 // et bascule dans un historique masqué par défaut (pour ne pas alourdir
 // visuellement l'écran d'administration).
 // ════════════════════════════════════════════
-function openAnomalies(){
-  return (APP.anomalies||[]).filter(a=>a.status==='open');
+function openAnomalies(sectorFilter){
+  let list=(APP.anomalies||[]).filter(a=>a.status==='open');
+  if(sectorFilter) list=list.filter(a=>sectorFilter.includes(a.cat));
+  return list;
 }
-function resolvedAnomalies(){
-  return (APP.anomalies||[]).filter(a=>a.status==='resolved');
+function resolvedAnomalies(sectorFilter){
+  let list=(APP.anomalies||[]).filter(a=>a.status==='resolved');
+  if(sectorFilter) list=list.filter(a=>sectorFilter.includes(a.cat));
+  return list;
 }
 function resolveAnomaly(id){
   if(adminState.role!=='admin') return; // seul l'administrateur peut résoudre
@@ -996,7 +997,7 @@ function resolveAnomaly(id){
     const rec=APP.anomalies.find(x=>x.id===id);
     if(rec){
       rec.status='resolved';
-      rec.resolvedBy=adminState.currentUserName||'Administrateur';
+      rec.resolvedBy='Administrateur';
       rec.resolvedDate=today();
       rec.resolvedTime=nowTime();
     }
@@ -1015,9 +1016,10 @@ function toggleAnomalyHistory(){
   renderAdmin();
 }
 // canResolve : true pour l'Administrateur (seul rôle habilité à résoudre/réouvrir)
-function renderAnomaliesCard(canResolve){
-  const open=openAnomalies();
-  const resolved=resolvedAnomalies();
+// sectorFilter : null (Admin, voit tout) ou tableau de catégories (Chef, limité à son secteur)
+function renderAnomaliesCard(canResolve, sectorFilter){
+  const open=openAnomalies(sectorFilter);
+  const resolved=resolvedAnomalies(sectorFilter);
   return `<div class="card">
     <div class="card-title">Anomalies signalées ${open.length>0?`<span class="badge badge-red" style="margin-left:6px">${open.length} en cours</span>`:''}</div>
     ${open.length===0?`<p style="font-size:15px;color:var(--gray)">Aucune anomalie en cours 👍</p>`:`
@@ -1056,7 +1058,13 @@ function renderAnomaliesCard(canResolve){
 // ════════════════════════════════════════════
 // VUE ADMIN
 // ════════════════════════════════════════════
-let adminState={locked:true,pass:'',selectedName:'',role:null,currentUserName:null,currentUserId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false};
+let adminState={locked:true,pass:'',role:null,chefAccountId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false,addingChef:false,newChefName:'',newChefCode:'',newChefSectors:[]};
+const ADMIN_CODE='1234';
+ 
+function getCurrentChefAccount(){
+  if(adminState.role!=='chef') return null;
+  return (APP.chefAccounts||[]).find(a=>a.id===adminState.chefAccountId) || null;
+}
  
 // ════════════════════════════════════════════
 // VALIDATION MAINTENANCE — double signature Admin / Chef d'atelier
@@ -1069,15 +1077,16 @@ function validationBadge(record, role){
   if(v && v.done) return `<span class="badge badge-green">✓ ${v.time}</span>`;
   return `<span class="badge badge-gray">En attente</span>`;
 }
-function machinesDoneNotValidated(role){
+function machinesDoneNotValidated(role, sectorFilter){
   return APP.machines.filter(m=>{
+    if(sectorFilter && !sectorFilter.includes(m.cat)) return false;
     const r=APP.weekRecords[m.id];
     return r && !isValidated(r, role);
   });
 }
-function renderValidationBanner(role){
+function renderValidationBanner(role, sectorFilter){
   if(!isUrgentPeriod()) return '';
-  const pending = machinesDoneNotValidated(role);
+  const pending = machinesDoneNotValidated(role, sectorFilter);
   if(pending.length===0) return '';
   const roleLabel = role==='admin' ? 'Administrateur' : "Chef d'atelier";
   return `<div class="warn-banner">
@@ -1088,7 +1097,7 @@ function renderValidationBanner(role){
 function toggleValidation(machineId, role){
   const record = APP.weekRecords[machineId];
   if(!record) return;
-  const label = adminState.currentUserName || (role==='admin' ? 'Administrateur' : "Chef d'atelier");
+  const label = role==='admin' ? 'Administrateur' : "Chef d'atelier";
   if(isValidated(record, role)){
     if(!confirm(`Annuler la validation (${label}) pour ${record.machineName||machineId} ?`)) return;
     syncedWrite(()=>{
@@ -1106,29 +1115,56 @@ function toggleValidation(machineId, role){
 }
  
 function renderChefView(c){
+  const account = getCurrentChefAccount();
+  if(!account){
+    c.innerHTML=`
+    <div class="success-screen">
+      <div class="section-title">Compte introuvable</div>
+      <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">Ce compte Chef d'atelier a été supprimé ou modifié. Reconnectez-vous.</div>
+      <button class="btn btn-primary" onclick="lockAdmin()">Retour</button>
+    </div>`;
+    return;
+  }
+  const sectors = account.sectors||[];
   const urgent=isUrgentPeriod();
-  const pendingTPM=APP.machines.filter(m=>!APP.weekRecords[m.id]);
+ 
+  if(sectors.length===0){
+    c.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+      <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— ${account.name}</span></div>
+      <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
+    </div>
+    <div class="warn-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Aucun secteur ne vous a été attribué pour l'instant. Contactez l'administrateur pour qu'il vous en attribue au moins un.</span>
+    </div>`;
+    return;
+  }
+ 
+  const sectorMachines = APP.machines.filter(m=>sectors.includes(m.cat));
+  const pendingTPM = sectorMachines.filter(m=>!APP.weekRecords[m.id]);
+ 
   c.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-    <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— Chef d'atelier</span></div>
+    <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— ${account.name}</span></div>
     <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
   </div>
-  <div class="section-sub">Suivi TPM — semaine du ${weekLabel(APP.weekKey)}</div>
+  <div class="section-sub">Secteurs : ${sectors.map(s=>`<span class="badge badge-yellow" style="margin-right:4px">${s}</span>`).join('')} — semaine du ${weekLabel(APP.weekKey)}</div>
  
   ${pendingTPM.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
     ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pendingTPM.length} machine${pendingTPM.length>1?'s':''} pas encore contrôlée${pendingTPM.length>1?'s':''} cette semaine : ${pendingTPM.map(m=>m.name).join(' · ')}
-  </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
+  </div>`:`<div class="info-banner">Toutes les machines de vos secteurs ont été contrôlées cette semaine</div>`}
  
-  ${renderValidationBanner('chef')}
+  ${renderValidationBanner('chef', sectors)}
  
-  ${renderAnomaliesCard(false)}
+  ${renderAnomaliesCard(false, sectors)}
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui a validé</div>
     <table class="tbl">
       <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
       <tbody>
-        ${APP.machines.map(m=>{
+        ${sectorMachines.map(m=>{
           const r=APP.weekRecords[m.id];
           let statusCell;
           if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
@@ -1144,29 +1180,23 @@ function renderChefView(c){
         }).join('')}
       </tbody>
     </table>
-    <div class="hint">Vous validez en tant que Chef d'atelier. La colonne "Validation Admin" reflète en temps réel la validation de l'administrateur.</div>
+    <div class="hint">Vous validez en tant que Chef d'atelier pour vos secteurs. La colonne "Validation Admin" reflète en temps réel la validation de l'administrateur.</div>
   </div>`;
 }
  
 function renderAdmin(){
   const c=document.getElementById('admin-content');
   if(adminState.locked){
-    const sups=APP.supervisors||[];
     c.innerHTML=`
     <div class="lock-screen">
       <div class="lock-box">
         <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
         <div class="section-title" style="margin-bottom:4px">Accès superviseur</div>
-        <div class="section-sub">Sélectionnez votre nom et entrez votre code personnel</div>
-        <label class="lbl">Nom</label>
-        <select id="admin-name-select" onchange="adminState.selectedName=this.value">
-          <option value="">— Sélectionner —</option>
-          ${sups.map(s=>`<option value="${s.name}" ${adminState.selectedName===s.name?'selected':''}>${s.name} (${s.role==='admin'?'Administrateur':"Chef d'atelier"})</option>`).join('')}
-        </select>
+        <div class="section-sub">Code Administrateur ou code personnel Chef d'atelier</div>
         <label class="lbl">Code secret</label>
         <input type="password" placeholder="••••" id="admin-pass" oninput="adminState.pass=this.value" onkeydown="if(event.key==='Enter')tryAdmin()">
         <button class="btn btn-primary" style="margin-top:9px" onclick="tryAdmin()">Accéder</button>
-        <div id="admin-err" style="color:var(--red);font-size:12px;margin-top:7px;display:none">Nom ou code incorrect</div>
+        <div id="admin-err" style="color:var(--red);font-size:12px;margin-top:7px;display:none">Code incorrect</div>
       </div>
     </div>`;
     return;
@@ -1196,11 +1226,9 @@ function renderAdmin(){
     ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
   </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
  
-  ${renderValidationBanner('admin')}
+  ${renderValidationBanner('admin', null)}
  
-  ${renderAnomaliesCard(true)}
- 
-  ${renderSupervisorsCard()}
+  ${renderAnomaliesCard(true, null)}
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
@@ -1224,7 +1252,49 @@ function renderAdmin(){
         }).join('')}
       </tbody>
     </table>
-    <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier.</div>
+    <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier concerné.</div>
+  </div>
+ 
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Comptes Chef d'atelier (${(APP.chefAccounts||[]).length})</div>
+      <button class="btn btn-secondary btn-sm" onclick="toggleAddChef()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter un compte</button>
+    </div>
+    ${adminState.addingChef?`
+    <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
+      <label class="lbl" style="margin-top:0;color:var(--yellow)">Nom du chef</label>
+      <input type="text" placeholder="Ex: Jean Dupont" id="new-chef-name" value="${adminState.newChefName}" oninput="adminState.newChefName=this.value">
+      <label class="lbl" style="color:var(--yellow)">Code secret personnel</label>
+      <input type="text" placeholder="Ex: 5678" id="new-chef-code" value="${adminState.newChefCode}" oninput="adminState.newChefCode=this.value">
+      <label class="lbl" style="color:var(--yellow)">Secteurs autorisés</label>
+      ${cats.map(cat=>`<div class="chk-row">
+        <input type="checkbox" id="new-chef-cat-${cat}" ${adminState.newChefSectors.includes(cat)?'checked':''} onchange="toggleNewChefSector('${cat}',this.checked)">
+        <label for="new-chef-cat-${cat}">${cat}</label>
+      </div>`).join('')}
+      <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addChefAccount()">Créer le compte</button>
+    </div>`:''}
+    ${(APP.chefAccounts||[]).length===0?`<p style="font-size:15px;color:var(--gray)">Aucun compte Chef d'atelier créé pour l'instant.</p>`:`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${APP.chefAccounts.map(acc=>`
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:17px;color:#fff">${acc.name}</div>
+            <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">Code : ${acc.code}</div>
+          </div>
+          <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteChefAccount('${acc.id}')">Supprimer</button>
+        </div>
+        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Secteurs</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${cats.map(cat=>`<div class="chk-row" style="padding:4px 0">
+            <input type="checkbox" id="chef-${acc.id}-${cat}" ${acc.sectors.includes(cat)?'checked':''} onchange="toggleChefSector('${acc.id}','${cat}',this.checked)">
+            <label for="chef-${acc.id}-${cat}" style="font-size:14px">${cat}</label>
+          </div>`).join('')}
+        </div>
+        ${acc.sectors.length===0?`<div class="hint" style="margin-top:8px">Aucun secteur attribué — ce chef ne voit rien pour l'instant.</div>`:''}
+      </div>`).join('')}
+    </div>`}
+    <div class="hint" style="margin-top:12px">Chaque Chef d'atelier se connecte avec son propre code depuis l'onglet Admin, et ne voit que les machines des secteurs cochés ci-dessus.</div>
   </div>
  
   <div class="card">
@@ -1401,27 +1471,20 @@ function toggleWeekGroup(wk){
 }
  
 function tryAdmin(){
-  const nameSel=document.getElementById('admin-name-select');
-  const name=nameSel?nameSel.value:adminState.selectedName;
   const input=document.getElementById('admin-pass');
-  const code=input?input.value:adminState.pass;
-  const sup=(APP.supervisors||[]).find(s=>s.name===name && s.code===code);
-  if(sup){
-    adminState.locked=false;
-    adminState.role=sup.role;
-    adminState.currentUserName=sup.name;
-    adminState.currentUserId=sup.id;
-    renderAdmin();
-  } else {
-    const err=document.getElementById('admin-err');if(err)err.style.display='block';
+  const val=input?input.value:adminState.pass;
+  if(val===ADMIN_CODE){
+    adminState.locked=false;adminState.role='admin';adminState.chefAccountId=null;renderAdmin();
+    return;
   }
+  const chefAccount=(APP.chefAccounts||[]).find(a=>a.code===val);
+  if(chefAccount){
+    adminState.locked=false;adminState.role='chef';adminState.chefAccountId=chefAccount.id;renderAdmin();
+    return;
+  }
+  const err=document.getElementById('admin-err');if(err)err.style.display='block';
 }
-function lockAdmin(){
-  adminState.locked=true;adminState.role=null;
-  adminState.currentUserName=null;adminState.currentUserId=null;
-  adminState.pass='';adminState.selectedName='';
-  renderAdmin();
-}
+function lockAdmin(){adminState.locked=true;adminState.role=null;adminState.chefAccountId=null;renderAdmin();}
 function toggleAddMachine(){adminState.addingMachine=!adminState.addingMachine;renderAdmin();}
 function toggleArchive(){adminState.showArchive=!adminState.showArchive;renderAdmin();}
 function addMachine(){
@@ -1467,67 +1530,51 @@ function removeOperator(cat,i){
 }
  
 // ════════════════════════════════════════════
-// COMPTES SUPERVISEURS — Admin(s) et Chef(s) d'atelier nominatifs
-// Seul un compte de rôle "admin" peut créer/modifier/supprimer des comptes.
+// COMPTES CHEF D'ATELIER — création, secteurs, suppression
 // ════════════════════════════════════════════
-function renderSupervisorsCard(){
-  const sups=APP.supervisors||[];
-  return `<div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">Comptes superviseurs (${sups.length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="addSupervisor()">+ Ajouter un compte</button>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>Nom</th><th>Rôle</th><th>Code</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${sups.map(s=>`<tr>
-          <td style="font-weight:600">${s.name}${adminState.currentUserId===s.id?' <span class="badge badge-gray">Vous</span>':''}</td>
-          <td><span class="badge ${s.role==='admin'?'badge-yellow':'badge-gray'}">${s.role==='admin'?'Administrateur':"Chef d'atelier"}</span></td>
-          <td class="mono">${s.code}</td>
-          <td style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" onclick="editSupervisorCode('${s.id}')">Changer le code</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteSupervisor('${s.id}')">Supprimer</button>
-          </td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    <div class="hint">Chaque personne se connecte avec son propre nom + son propre code depuis l'écran de verrouillage Admin. Seul un compte "Administrateur" peut gérer cette liste.</div>
-  </div>`;
+function toggleAddChef(){
+  adminState.addingChef=!adminState.addingChef;
+  adminState.newChefName='';adminState.newChefCode='';adminState.newChefSectors=[];
+  renderAdmin();
 }
-function addSupervisor(){
-  const name=prompt("Nom complet du nouveau compte (ex: Julien Petit) :");
-  if(!name||!name.trim()) return;
-  const clean=name.trim();
-  if((APP.supervisors||[]).some(s=>s.name.toLowerCase()===clean.toLowerCase())){ alert('Un compte porte déjà ce nom.'); return; }
-  const roleInput=prompt("Rôle du compte : tapez \"admin\" pour Administrateur, ou \"chef\" pour Chef d'atelier","chef");
-  if(!roleInput||!roleInput.trim()) return;
-  const role = roleInput.trim().toLowerCase().startsWith('a') ? 'admin' : 'chef';
-  const code=prompt("Code secret pour ce compte (ex: 4 chiffres) :");
-  if(!code||!code.trim()) return;
+function toggleNewChefSector(cat, checked){
+  if(checked){ if(!adminState.newChefSectors.includes(cat)) adminState.newChefSectors.push(cat); }
+  else { adminState.newChefSectors=adminState.newChefSectors.filter(c=>c!==cat); }
+}
+function addChefAccount(){
+  const name=document.getElementById('new-chef-name')?.value||adminState.newChefName;
+  const code=document.getElementById('new-chef-code')?.value||adminState.newChefCode;
+  if(!name.trim()){alert('Entrez un nom pour ce chef.');return;}
+  if(!code.trim()){alert('Entrez un code secret.');return;}
+  if(code.trim()===ADMIN_CODE){alert('Ce code est réservé à l\'Administrateur, choisissez-en un autre.');return;}
+  const codeExists=(APP.chefAccounts||[]).some(a=>a.code===code.trim());
+  if(codeExists){alert('Ce code est déjà utilisé par un autre compte Chef.');return;}
+  const sectors=[...adminState.newChefSectors];
   syncedWrite(()=>{
-    if(!APP.supervisors) APP.supervisors=[];
-    APP.supervisors.push({id:'sup-'+Date.now(), name:clean, role, code:code.trim()});
+    if(!APP.chefAccounts) APP.chefAccounts=[];
+    APP.chefAccounts.push({
+      id:'CHEF-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      name:name.trim(), code:code.trim(), sectors
+    });
+  }).then(()=>{
+    adminState.addingChef=false;adminState.newChefName='';adminState.newChefCode='';adminState.newChefSectors=[];
+    renderAdmin();
+  });
+}
+function toggleChefSector(accountId, cat, checked){
+  syncedWrite(()=>{
+    const acc=(APP.chefAccounts||[]).find(a=>a.id===accountId);
+    if(!acc) return;
+    if(checked){ if(!acc.sectors.includes(cat)) acc.sectors.push(cat); }
+    else { acc.sectors=acc.sectors.filter(c=>c!==cat); }
   }).then(renderAdmin);
 }
-function editSupervisorCode(id){
-  const s=(APP.supervisors||[]).find(x=>x.id===id);
-  if(!s) return;
-  const code=prompt(`Nouveau code pour ${s.name} :`, s.code);
-  if(!code||!code.trim()) return;
+function deleteChefAccount(accountId){
+  const acc=(APP.chefAccounts||[]).find(a=>a.id===accountId);
+  if(!acc) return;
+  if(!confirm(`Supprimer le compte Chef d'atelier "${acc.name}" ?`)) return;
   syncedWrite(()=>{
-    const rec=(APP.supervisors||[]).find(x=>x.id===id);
-    if(rec) rec.code=code.trim();
-  }).then(renderAdmin);
-}
-function deleteSupervisor(id){
-  const s=(APP.supervisors||[]).find(x=>x.id===id);
-  if(!s) return;
-  const admins=(APP.supervisors||[]).filter(x=>x.role==='admin');
-  if(s.role==='admin' && admins.length<=1){ alert("Impossible de supprimer le dernier compte Administrateur."); return; }
-  if(adminState.currentUserId===id){ alert('Vous ne pouvez pas supprimer votre propre compte pendant que vous êtes connecté(e) dessus.'); return; }
-  if(!confirm(`Supprimer le compte "${s.name}" ?`)) return;
-  syncedWrite(()=>{
-    APP.supervisors=(APP.supervisors||[]).filter(x=>x.id!==id);
+    APP.chefAccounts=APP.chefAccounts.filter(a=>a.id!==accountId);
   }).then(renderAdmin);
 }
  
@@ -1577,6 +1624,9 @@ function renameCategory(oldCat){
     delete APP.operators[oldCat];
     APP.machines.forEach(m=>{ if(m.cat===oldCat) m.cat=clean; });
     if(adminState.newCat===oldCat) adminState.newCat=clean;
+    (APP.chefAccounts||[]).forEach(acc=>{
+      acc.sectors=acc.sectors.map(s=>s===oldCat?clean:s);
+    });
   }).then(renderAdmin);
 }
 function deleteCategory(cat){
@@ -1590,6 +1640,9 @@ function deleteCategory(cat){
       const remaining=Object.keys(APP.questions);
       adminState.newCat=remaining[0]||'';
     }
+    (APP.chefAccounts||[]).forEach(acc=>{
+      acc.sectors=acc.sectors.filter(s=>s!==cat);
+    });
   }).then(renderAdmin);
 }
  
