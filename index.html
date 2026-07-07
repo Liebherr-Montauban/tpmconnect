@@ -321,7 +321,11 @@ function defaultData(){
     weekKey: currentWeekKey(),
     weekRecords:{},    // { machineId: record } pour la semaine en cours
     instructionSheets:{}, // { machineId: {fileName, addedAt} } — le PDF lui-même vit à côté du fichier HTML
-    anomalies:[]      // liste de toutes les anomalies signalées (ouvertes + résolues), jamais supprimée
+    anomalies:[],     // liste de toutes les anomalies signalées (ouvertes + résolues), jamais supprimée
+    supervisors:[      // comptes nominatifs Admin / Chef d'atelier — chacun son nom + son code
+      {id:'admin-1', name:'Administrateur', role:'admin', code:'1234'},
+      {id:'chef-1', name:"Chef d'atelier", role:'chef', code:'4321'}
+    ]
   };
 }
  
@@ -369,6 +373,10 @@ async function fetchFromSheet(){
         if(!APP.weekRecords) APP.weekRecords = {};
         if(!APP.instructionSheets) APP.instructionSheets = {};
         if(!APP.anomalies) APP.anomalies = [];
+        if(!APP.supervisors) APP.supervisors = [
+          {id:'admin-1', name:'Administrateur', role:'admin', code:'1234'},
+          {id:'chef-1', name:"Chef d'atelier", role:'chef', code:'4321'}
+        ];
         rolloverWeekIfNeeded();
         lastKnownJSON = newJSON;
         initialSyncDone = true;
@@ -988,7 +996,7 @@ function resolveAnomaly(id){
     const rec=APP.anomalies.find(x=>x.id===id);
     if(rec){
       rec.status='resolved';
-      rec.resolvedBy='Administrateur';
+      rec.resolvedBy=adminState.currentUserName||'Administrateur';
       rec.resolvedDate=today();
       rec.resolvedTime=nowTime();
     }
@@ -1048,9 +1056,7 @@ function renderAnomaliesCard(canResolve){
 // ════════════════════════════════════════════
 // VUE ADMIN
 // ════════════════════════════════════════════
-let adminState={locked:true,pass:'',role:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false};
-const ADMIN_CODE='1234';
-const CHEF_CODE='4321';
+let adminState={locked:true,pass:'',selectedName:'',role:null,currentUserName:null,currentUserId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false};
  
 // ════════════════════════════════════════════
 // VALIDATION MAINTENANCE — double signature Admin / Chef d'atelier
@@ -1082,7 +1088,7 @@ function renderValidationBanner(role){
 function toggleValidation(machineId, role){
   const record = APP.weekRecords[machineId];
   if(!record) return;
-  const label = role==='admin' ? 'Administrateur' : "Chef d'atelier";
+  const label = adminState.currentUserName || (role==='admin' ? 'Administrateur' : "Chef d'atelier");
   if(isValidated(record, role)){
     if(!confirm(`Annuler la validation (${label}) pour ${record.machineName||machineId} ?`)) return;
     syncedWrite(()=>{
@@ -1145,16 +1151,22 @@ function renderChefView(c){
 function renderAdmin(){
   const c=document.getElementById('admin-content');
   if(adminState.locked){
+    const sups=APP.supervisors||[];
     c.innerHTML=`
     <div class="lock-screen">
       <div class="lock-box">
         <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
         <div class="section-title" style="margin-bottom:4px">Accès superviseur</div>
-        <div class="section-sub">1234 = Administrateur · 4321 = Chef d'atelier</div>
+        <div class="section-sub">Sélectionnez votre nom et entrez votre code personnel</div>
+        <label class="lbl">Nom</label>
+        <select id="admin-name-select" onchange="adminState.selectedName=this.value">
+          <option value="">— Sélectionner —</option>
+          ${sups.map(s=>`<option value="${s.name}" ${adminState.selectedName===s.name?'selected':''}>${s.name} (${s.role==='admin'?'Administrateur':"Chef d'atelier"})</option>`).join('')}
+        </select>
         <label class="lbl">Code secret</label>
         <input type="password" placeholder="••••" id="admin-pass" oninput="adminState.pass=this.value" onkeydown="if(event.key==='Enter')tryAdmin()">
         <button class="btn btn-primary" style="margin-top:9px" onclick="tryAdmin()">Accéder</button>
-        <div id="admin-err" style="color:var(--red);font-size:12px;margin-top:7px;display:none">Code incorrect</div>
+        <div id="admin-err" style="color:var(--red);font-size:12px;margin-top:7px;display:none">Nom ou code incorrect</div>
       </div>
     </div>`;
     return;
@@ -1187,6 +1199,8 @@ function renderAdmin(){
   ${renderValidationBanner('admin')}
  
   ${renderAnomaliesCard(true)}
+ 
+  ${renderSupervisorsCard()}
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
@@ -1387,13 +1401,27 @@ function toggleWeekGroup(wk){
 }
  
 function tryAdmin(){
+  const nameSel=document.getElementById('admin-name-select');
+  const name=nameSel?nameSel.value:adminState.selectedName;
   const input=document.getElementById('admin-pass');
-  const val=input?input.value:adminState.pass;
-  if(val===ADMIN_CODE){adminState.locked=false;adminState.role='admin';renderAdmin();}
-  else if(val===CHEF_CODE){adminState.locked=false;adminState.role='chef';renderAdmin();}
-  else{const err=document.getElementById('admin-err');if(err)err.style.display='block';}
+  const code=input?input.value:adminState.pass;
+  const sup=(APP.supervisors||[]).find(s=>s.name===name && s.code===code);
+  if(sup){
+    adminState.locked=false;
+    adminState.role=sup.role;
+    adminState.currentUserName=sup.name;
+    adminState.currentUserId=sup.id;
+    renderAdmin();
+  } else {
+    const err=document.getElementById('admin-err');if(err)err.style.display='block';
+  }
 }
-function lockAdmin(){adminState.locked=true;adminState.role=null;renderAdmin();}
+function lockAdmin(){
+  adminState.locked=true;adminState.role=null;
+  adminState.currentUserName=null;adminState.currentUserId=null;
+  adminState.pass='';adminState.selectedName='';
+  renderAdmin();
+}
 function toggleAddMachine(){adminState.addingMachine=!adminState.addingMachine;renderAdmin();}
 function toggleArchive(){adminState.showArchive=!adminState.showArchive;renderAdmin();}
 function addMachine(){
@@ -1436,6 +1464,71 @@ function removeOperator(cat,i){
   if(confirm('Supprimer cet opérateur ?')){
     syncedWrite(()=>{ APP.operators[cat].splice(i,1); }).then(renderAdmin);
   }
+}
+ 
+// ════════════════════════════════════════════
+// COMPTES SUPERVISEURS — Admin(s) et Chef(s) d'atelier nominatifs
+// Seul un compte de rôle "admin" peut créer/modifier/supprimer des comptes.
+// ════════════════════════════════════════════
+function renderSupervisorsCard(){
+  const sups=APP.supervisors||[];
+  return `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Comptes superviseurs (${sups.length})</div>
+      <button class="btn btn-secondary btn-sm" onclick="addSupervisor()">+ Ajouter un compte</button>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Nom</th><th>Rôle</th><th>Code</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${sups.map(s=>`<tr>
+          <td style="font-weight:600">${s.name}${adminState.currentUserId===s.id?' <span class="badge badge-gray">Vous</span>':''}</td>
+          <td><span class="badge ${s.role==='admin'?'badge-yellow':'badge-gray'}">${s.role==='admin'?'Administrateur':"Chef d'atelier"}</span></td>
+          <td class="mono">${s.code}</td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="editSupervisorCode('${s.id}')">Changer le code</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSupervisor('${s.id}')">Supprimer</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="hint">Chaque personne se connecte avec son propre nom + son propre code depuis l'écran de verrouillage Admin. Seul un compte "Administrateur" peut gérer cette liste.</div>
+  </div>`;
+}
+function addSupervisor(){
+  const name=prompt("Nom complet du nouveau compte (ex: Julien Petit) :");
+  if(!name||!name.trim()) return;
+  const clean=name.trim();
+  if((APP.supervisors||[]).some(s=>s.name.toLowerCase()===clean.toLowerCase())){ alert('Un compte porte déjà ce nom.'); return; }
+  const roleInput=prompt("Rôle du compte : tapez \"admin\" pour Administrateur, ou \"chef\" pour Chef d'atelier","chef");
+  if(!roleInput||!roleInput.trim()) return;
+  const role = roleInput.trim().toLowerCase().startsWith('a') ? 'admin' : 'chef';
+  const code=prompt("Code secret pour ce compte (ex: 4 chiffres) :");
+  if(!code||!code.trim()) return;
+  syncedWrite(()=>{
+    if(!APP.supervisors) APP.supervisors=[];
+    APP.supervisors.push({id:'sup-'+Date.now(), name:clean, role, code:code.trim()});
+  }).then(renderAdmin);
+}
+function editSupervisorCode(id){
+  const s=(APP.supervisors||[]).find(x=>x.id===id);
+  if(!s) return;
+  const code=prompt(`Nouveau code pour ${s.name} :`, s.code);
+  if(!code||!code.trim()) return;
+  syncedWrite(()=>{
+    const rec=(APP.supervisors||[]).find(x=>x.id===id);
+    if(rec) rec.code=code.trim();
+  }).then(renderAdmin);
+}
+function deleteSupervisor(id){
+  const s=(APP.supervisors||[]).find(x=>x.id===id);
+  if(!s) return;
+  const admins=(APP.supervisors||[]).filter(x=>x.role==='admin');
+  if(s.role==='admin' && admins.length<=1){ alert("Impossible de supprimer le dernier compte Administrateur."); return; }
+  if(adminState.currentUserId===id){ alert('Vous ne pouvez pas supprimer votre propre compte pendant que vous êtes connecté(e) dessus.'); return; }
+  if(!confirm(`Supprimer le compte "${s.name}" ?`)) return;
+  syncedWrite(()=>{
+    APP.supervisors=(APP.supervisors||[]).filter(x=>x.id!==id);
+  }).then(renderAdmin);
 }
  
 // ════════════════════════════════════════════
