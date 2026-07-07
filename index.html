@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>TPMConnect</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#F5C518">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TPMConnect">
-<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -149,9 +143,6 @@ option{background:var(--bg3)}
 .tbl-fixed td{overflow:hidden}
 .cell-clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%}
 .cell-wrap{overflow-wrap:break-word;word-break:break-word}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tbl-wrap::-webkit-scrollbar{height:6px}
-.tbl-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
  
 .success-screen{text-align:center;padding:56px 26px}
 .success-icon{width:92px;height:92px;background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
@@ -164,7 +155,7 @@ option{background:var(--bg3)}
  
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center;max-height:90vh;overflow-y:auto}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center}
 .modal-box.wide{max-width:520px;text-align:left}
  
 .section-title{font-family:var(--font-head);font-size:28px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;color:#fff}
@@ -184,48 +175,6 @@ option{background:var(--bg3)}
 .week-group-head:hover{background:var(--bg4)}
 .week-group-title{font-family:var(--font-head);font-size:17px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.3px}
 .week-group-body{padding:0 4px}
-
-/* ═══════════════════════════════════════
-   ADAPTATION PETITS ÉCRANS (téléphone)
-   ═══════════════════════════════════════ */
-@media (max-width: 480px){
-  html,body{font-size:15px}
-  .view{padding:12px;padding-bottom:50px}
-  .topbar{padding:0 10px;height:60px}
-  .logo{font-size:19px}
-  .logo-dot{width:14px;height:14px}
-  .sync-indicator span{display:none} /* garde juste le point coloré, texte trop long sinon */
-  .topbar-tab{padding:6px 8px;font-size:10px}
-  .topbar-tab svg{width:20px;height:20px}
-  .card{padding:14px;border-radius:12px}
-  .section-title{font-size:21px}
-  .machine-header h2{font-size:22px}
-  select,input[type=text],input[type=password]{padding:12px 14px;font-size:15px}
-  .btn{padding:14px 16px;font-size:14px}
-  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
-  .stats-row .stat-card:last-child{grid-column:span 2}
-  .stat-num{font-size:26px}
-  .machine-grid{grid-template-columns:1fr}
-  .check-row{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 0}
-  .radio-pair{width:100%}
-  .radio-btn{flex:1}
-  .machine-header{padding:14px;flex-wrap:wrap}
-
-  /* Tableaux : au lieu de s'écraser, ils défilent horizontalement.
-     Le scroll s'étend jusqu'aux bords de la carte, et une largeur mini
-     par tableau garantit que le texte reste lisible plutôt que compressé. */
-  .tbl-wrap{margin:0 -14px;padding:0 14px}
-  .tbl{font-size:13px;min-width:560px}
-  .tbl th,.tbl td{padding:8px 9px;white-space:nowrap}
-
-  .modal-box{padding:18px;max-width:calc(100vw - 32px)}
-  .modal-box.wide{max-width:calc(100vw - 32px)}
-  #bc-modal-inner{max-width:100%}
-  #bc-modal-inner canvas{max-width:100%;height:auto}
-
-  .week-group-head{padding:12px}
-  .week-group-title{font-size:14px}
-}
  
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -372,7 +321,7 @@ function defaultData(){
     weekKey: currentWeekKey(),
     weekRecords:{},    // { machineId: record } pour la semaine en cours
     instructionSheets:{}, // { machineId: {fileName, addedAt} } — le PDF lui-même vit à côté du fichier HTML
-    anomalies:[]        // { id, machineId, machineName, reportedDate, reportedTime, reportedBy, status, resolvedBy, resolvedDate, notes }
+    anomalies:[]      // liste de toutes les anomalies signalées (ouvertes + résolues), jamais supprimée
   };
 }
  
@@ -656,13 +605,6 @@ let opState = {
 function getCat(id){ const m=APP.machines.find(x=>x.id===id); return m?m.cat:null; }
 function getMachineName(id){ const m=APP.machines.find(x=>x.id===id); return m?m.name:id; }
 function getRecord(id){ return APP.weekRecords[id]||null; }
-
-// Une machine n'est "en anomalie" pour le tableau de bord que si une anomalie
-// de la semaine en cours existe encore et n'a PAS été marquée résolue —
-// contrairement à record.anomaly qui reste figé à vrai même après résolution.
-function hasOpenAnomalyThisWeek(machineId){
-  return (APP.anomalies||[]).some(a=>a.machineId===machineId && a.weekKey===APP.weekKey && a.status!=='resolue');
-}
  
 // ════════════════════════════════════════════
 // FICHES D'INSTRUCTION — PDF par machine (référence par nom de fichier)
@@ -923,13 +865,14 @@ function submitTPM(){
     APP.history.unshift(record); // archive, jamais supprimée
     if(hasIssue){
       if(!APP.anomalies) APP.anomalies=[];
-      APP.anomalies.push({
-        id: machineId+'-'+Date.now(),
-        machineId, machineName:getMachineName(machineId),
+      APP.anomalies.unshift({
+        id:'AN-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+        machineId, machineName:getMachineName(machineId), cat,
+        reportedBy:operatorName,
+        reportedDate:today(), reportedTime:nowTime(),
         weekKey:APP.weekKey,
-        reportedDate:today(), reportedTime:nowTime(), reportedBy:operatorName,
-        status:'signalee', // 'signalee' | 'en_cours' | 'resolue'
-        resolvedBy:null, resolvedDate:null, notes:''
+        status:'open',
+        resolvedBy:null, resolvedDate:null, resolvedTime:null
       });
     }
   });
@@ -951,12 +894,11 @@ function renderDashboard(){
   const c=document.getElementById('db-content');
   const machines=APP.machines, records=APP.weekRecords;
   const done=machines.filter(m=>records[m.id]).length;
-  const issues=machines.filter(m=>records[m.id]&&hasOpenAnomalyThisWeek(m.id)).length;
+  const issues=machines.filter(m=>records[m.id]&&records[m.id].anomaly).length;
   const pct=machines.length?Math.round(done/machines.length*100):0;
   const now=nowTime();
   const urgent=isUrgentPeriod();
   const pending=machines.filter(m=>!records[m.id]);
-  const openAnomalies=(APP.anomalies||[]).filter(a=>a.status!=='resolue');
  
   let html=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
@@ -975,13 +917,8 @@ function renderDashboard(){
  
   ${issues>0?`<div class="alert-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <div><strong>${issues} anomalie${issues>1?'s':''} non résolue${issues>1?'s':''} cette semaine</strong><br>
-    ${machines.filter(m=>records[m.id]&&hasOpenAnomalyThisWeek(m.id)).map(m=>`${m.name}`).join(' · ')}</div>
-  </div>`:''}
- 
-  ${openAnomalies.length>issues?`<div class="warn-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span><strong>${openAnomalies.length} anomalie${openAnomalies.length>1?'s':''} non résolue${openAnomalies.length>1?'s':''}</strong> au total (toutes semaines confondues) — voir l'onglet Admin pour le suivi</span>
+    <div><strong>${issues} anomalie${issues>1?'s':''} signalée${issues>1?'s':''}</strong><br>
+    ${machines.filter(m=>records[m.id]&&records[m.id].anomaly).map(m=>`${m.name}`).join(' · ')}</div>
   </div>`:''}
  
   <div class="stats-row">
@@ -997,12 +934,11 @@ function renderDashboard(){
   <div class="machine-grid">
     ${machines.map(m=>{
       const r=records[m.id];
-      const openIssue = r && hasOpenAnomalyThisWeek(m.id);
-      const cls = r?(openIssue?'issue':'done') : (urgent?'urgent':'');
+      const cls = r?(r.anomaly?'issue':'done') : (urgent?'urgent':'');
       return `<div class="machine-tile ${cls}">
         <div class="tile-name">${catIcon(m.cat)} ${m.name}</div>
         <div style="margin-bottom:5px"><span class="badge badge-gray">${m.cat}</span></div>
-        ${r?`<div class="tile-info"><span class="dot ${openIssue?'dot-red':'dot-green'}"></span> ${openIssue?'Anomalie':(r.anomaly?'Anomalie résolue':'Validé')}</div>
+        ${r?`<div class="tile-info"><span class="dot ${r.anomaly?'dot-red':'dot-green'}"></span> ${r.anomaly?'Anomalie':'Validé'}</div>
         <div class="tile-info" style="margin-top:2px">${r.operator} · ${r.time}</div>`
         :`<div class="tile-info"><span class="dot ${urgent?'dot-orange':'dot-gray'}"></span> En attente</div>`}
       </div>`;
@@ -1011,7 +947,7 @@ function renderDashboard(){
  
   ${done>0?`<div class="card">
     <div class="card-title">Récapitulatif de la semaine</div>
-    <div class="tbl-wrap"><table class="tbl">
+    <table class="tbl">
       <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th></tr></thead>
       <tbody>
         ${machines.filter(m=>records[m.id]).map(m=>{
@@ -1020,10 +956,10 @@ function renderDashboard(){
           <td style="color:var(--gray)">${r.date}</td>
           <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${r.time}</td>
           <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono);color:var(--gray)">${fmtDuration(r.durationSec)}</td>
-          <td>${hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">OK</span>`)}</td></tr>`;
+          <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td></tr>`;
         }).join('')}
       </tbody>
-    </table></div>
+    </table>
   </div>`:`<div style="text-align:center;padding:28px 20px;color:var(--gray);font-size:13px">
     Aucune TPM validée pour l'instant cette semaine.
   </div>`}`;
@@ -1032,59 +968,89 @@ function renderDashboard(){
 }
  
 // ════════════════════════════════════════════
-// VUE ADMIN
+// ANOMALIES — signalement / résolution / historique replié
+// Une anomalie disparaît de la liste "en cours" dès qu'elle est résolue,
+// et bascule dans un historique masqué par défaut (pour ne pas alourdir
+// visuellement l'écran d'administration).
 // ════════════════════════════════════════════
-let adminState={locked:true,pass:'',role:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined};
-const ADMIN_CODE='1234';
-const CHEF_CODE='4321';
- 
-// ════════════════════════════════════════════
-// SUIVI DES ANOMALIES — statut Signalée -> En cours -> Résolue
-// ════════════════════════════════════════════
-function anomalyStatusBadge(status){
-  if(status==='en_cours') return '<span class="badge badge-orange">En cours</span>';
-  if(status==='resolue') return '<span class="badge badge-green">Résolue</span>';
-  return '<span class="badge badge-red">Signalée</span>';
+function openAnomalies(){
+  return (APP.anomalies||[]).filter(a=>a.status==='open');
 }
-function updateAnomalyStatus(id, newStatus){
+function resolvedAnomalies(){
+  return (APP.anomalies||[]).filter(a=>a.status==='resolved');
+}
+function resolveAnomaly(id){
+  if(adminState.role!=='admin') return; // seul l'administrateur peut résoudre
+  const a=(APP.anomalies||[]).find(x=>x.id===id);
+  if(!a) return;
+  if(!confirm(`Marquer l'anomalie sur "${a.machineName}" comme résolue ?`)) return;
   syncedWrite(()=>{
-    if(!APP.anomalies) APP.anomalies=[];
-    const a=APP.anomalies.find(x=>x.id===id);
-    if(!a) return;
-    a.status=newStatus;
-    if(newStatus==='resolue'){
-      a.resolvedBy = adminState.role==='chef' ? "Chef d'atelier" : 'Administrateur';
-      a.resolvedDate = today()+' '+nowTime();
-    } else {
-      a.resolvedBy=null; a.resolvedDate=null;
+    const rec=APP.anomalies.find(x=>x.id===id);
+    if(rec){
+      rec.status='resolved';
+      rec.resolvedBy='Administrateur';
+      rec.resolvedDate=today();
+      rec.resolvedTime=nowTime();
     }
   }).then(renderAdmin);
 }
-function renderAnomaliesCard(){
-  const list=(APP.anomalies||[]).slice().reverse();
-  const open=list.filter(a=>a.status!=='resolue');
-  return `<div class="card" style="border-color:${open.length>0?'rgba(232,64,64,.3)':'var(--border)'}">
-    <div class="card-title">Suivi des anomalies (${open.length} ouverte${open.length>1?'s':''})</div>
-    ${list.length===0?`<p style="font-size:15px;color:var(--gray)">Aucune anomalie enregistrée pour l'instant.</p>`:`
-    <div class="tbl-wrap"><table class="tbl">
+function reopenAnomaly(id){
+  if(adminState.role!=='admin') return;
+  if(!confirm("Réouvrir cette anomalie (la remettre en cours) ?")) return;
+  syncedWrite(()=>{
+    const rec=(APP.anomalies||[]).find(x=>x.id===id);
+    if(rec){ rec.status='open'; rec.resolvedBy=null; rec.resolvedDate=null; rec.resolvedTime=null; }
+  }).then(renderAdmin);
+}
+function toggleAnomalyHistory(){
+  adminState.showAnomalyHistory=!adminState.showAnomalyHistory;
+  renderAdmin();
+}
+// canResolve : true pour l'Administrateur (seul rôle habilité à résoudre/réouvrir)
+function renderAnomaliesCard(canResolve){
+  const open=openAnomalies();
+  const resolved=resolvedAnomalies();
+  return `<div class="card">
+    <div class="card-title">Anomalies signalées ${open.length>0?`<span class="badge badge-red" style="margin-left:6px">${open.length} en cours</span>`:''}</div>
+    ${open.length===0?`<p style="font-size:15px;color:var(--gray)">Aucune anomalie en cours 👍</p>`:`
+    <table class="tbl">
       <thead><tr><th>Machine</th><th>Signalée le</th><th>Par</th><th>Statut</th><th>Action</th></tr></thead>
       <tbody>
-        ${list.map(a=>`
-          <tr>
-            <td style="font-weight:600">${a.machineName}</td>
-            <td style="color:var(--gray)">${a.reportedDate} ${a.reportedTime}</td>
-            <td>${a.reportedBy}</td>
-            <td>${anomalyStatusBadge(a.status)}</td>
-            <td>
-              ${a.status==='signalee'?`<button class="btn btn-secondary btn-sm" onclick="updateAnomalyStatus('${a.id}','en_cours')">Prendre en charge</button>`:''}
-              ${a.status==='en_cours'?`<button class="btn btn-primary btn-sm" onclick="updateAnomalyStatus('${a.id}','resolue')">Marquer résolue</button>`:''}
-              ${a.status==='resolue'?`<span style="font-size:12px;color:var(--gray)">${a.resolvedBy} · ${a.resolvedDate}</span>`:''}
-            </td>
-          </tr>`).join('')}
+        ${open.map(a=>`<tr>
+          <td style="font-weight:600">${catIcon(a.cat)} ${a.machineName}</td>
+          <td style="color:var(--gray)">${a.reportedDate} ${a.reportedTime}</td>
+          <td>${a.reportedBy}</td>
+          <td><span class="badge badge-red">En cours</span></td>
+          <td>${canResolve?`<button class="btn btn-primary btn-sm" onclick="resolveAnomaly('${a.id}')">Marquer résolue</button>`:'<span style="color:var(--gray);font-size:14px">Réservé à l\'administrateur</span>'}</td>
+        </tr>`).join('')}
       </tbody>
-    </table></div>`}
+    </table>`}
+    ${resolved.length>0?`
+    <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
+      <button class="toggle-link" onclick="toggleAnomalyHistory()">${adminState.showAnomalyHistory?'Masquer':'Afficher'} l'historique des anomalies résolues (${resolved.length})</button>
+    </div>
+    ${adminState.showAnomalyHistory?`
+    <table class="tbl" style="margin-top:12px">
+      <thead><tr><th>Machine</th><th>Signalée le</th><th>Par</th><th>Statut</th><th>Action</th></tr></thead>
+      <tbody>
+        ${resolved.map(a=>`<tr>
+          <td style="font-weight:600">${catIcon(a.cat)} ${a.machineName}</td>
+          <td style="color:var(--gray)">${a.reportedDate} ${a.reportedTime}</td>
+          <td>${a.reportedBy}</td>
+          <td><span class="badge badge-green">Résolue</span></td>
+          <td style="color:var(--gray);font-size:14px">${a.resolvedBy} · ${a.resolvedDate} ${a.resolvedTime}${canResolve?` &nbsp;<button class="toggle-link" style="font-size:13px" onclick="reopenAnomaly('${a.id}')">Réouvrir</button>`:''}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`:''}`:''}
   </div>`;
 }
+ 
+// ════════════════════════════════════════════
+// VUE ADMIN
+// ════════════════════════════════════════════
+let adminState={locked:true,pass:'',role:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false};
+const ADMIN_CODE='1234';
+const CHEF_CODE='4321';
  
 // ════════════════════════════════════════════
 // VALIDATION MAINTENANCE — double signature Admin / Chef d'atelier
@@ -1149,17 +1115,17 @@ function renderChefView(c){
  
   ${renderValidationBanner('chef')}
  
-  ${renderAnomaliesCard()}
+  ${renderAnomaliesCard(false)}
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui a validé</div>
-    <div class="tbl-wrap"><table class="tbl">
+    <table class="tbl">
       <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
       <tbody>
         ${APP.machines.map(m=>{
           const r=APP.weekRecords[m.id];
           let statusCell;
-          if(r) statusCell = hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">Fait</span>`);
+          if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
           else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
           return `<tr>
             <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
@@ -1171,7 +1137,7 @@ function renderChefView(c){
           </tr>`;
         }).join('')}
       </tbody>
-    </table></div>
+    </table>
     <div class="hint">Vous validez en tant que Chef d'atelier. La colonne "Validation Admin" reflète en temps réel la validation de l'administrateur.</div>
   </div>`;
 }
@@ -1220,17 +1186,17 @@ function renderAdmin(){
  
   ${renderValidationBanner('admin')}
  
-  ${renderAnomaliesCard()}
+  ${renderAnomaliesCard(true)}
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
-    <div class="tbl-wrap"><table class="tbl">
+    <table class="tbl">
       <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Durée</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
       <tbody>
         ${APP.machines.map(m=>{
           const r=APP.weekRecords[m.id];
           let statusCell;
-          if(r) statusCell = hasOpenAnomalyThisWeek(m.id)?`<span class="badge badge-red">Anomalie</span>`:(r.anomaly?`<span class="badge badge-green">Résolue</span>`:`<span class="badge badge-green">Fait</span>`);
+          if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
           else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
           return `<tr>
             <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
@@ -1243,7 +1209,7 @@ function renderAdmin(){
           </tr>`;
         }).join('')}
       </tbody>
-    </table></div>
+    </table>
     <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier.</div>
   </div>
  
@@ -1252,7 +1218,7 @@ function renderAdmin(){
       <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
       <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
     </div>
-    <div class="tbl-wrap"><table class="tbl">
+    <table class="tbl">
       <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
       <tbody>
         ${cats.map(cat=>{
@@ -1269,7 +1235,7 @@ function renderAdmin(){
           </tr>`;
         }).join('')}
       </tbody>
-    </table></div>
+    </table>
     <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
   </div>
  
@@ -1396,7 +1362,7 @@ function renderArchiveByWeek(){
         <span style="font-size:20px;color:var(--gray);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .15s">▾</span>
       </div>
       ${isOpen?`<div class="week-group-body">
-        <div class="tbl-wrap"><table class="tbl">
+        <table class="tbl">
           <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th><th>Val. Admin</th><th>Val. Chef</th></tr></thead>
           <tbody>
             ${records.map(r=>`<tr>
@@ -1410,7 +1376,7 @@ function renderArchiveByWeek(){
               <td>${validationBadge(r,'chef')}</td>
             </tr>`).join('')}
           </tbody>
-        </table></div>
+        </table>
       </div>`:''}
     </div>`;
   }).join('');
@@ -1625,9 +1591,6 @@ document.getElementById('startup-modal').addEventListener('click',function(e){if
 rolloverWeekIfNeeded();
 renderOperator();
 fetchFromSheet();
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
 if(getParam('machine')){
   setTimeout(()=>{
     const sel=document.getElementById('op-name-select');
