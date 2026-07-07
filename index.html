@@ -336,7 +336,8 @@ function defaultData(){
     weekRecords:{},    // { machineId: record } pour la semaine en cours
     instructionSheets:{}, // { machineId: {fileName, addedAt} } — le PDF lui-même vit à côté du fichier HTML
     anomalies:[],      // liste de toutes les anomalies signalées (ouvertes + résolues), jamais supprimée
-    chefAccounts:[]    // { id, name, code, sectors:[cat,...] } — comptes Chef d'atelier, limités par secteur
+    chefAccounts:[],   // { id, name, code, sectors:[cat,...] } — comptes Chef d'atelier, limités par secteur
+    adminAccount:{ name:'Administrateur', code:'1234' } // compte Administrateur unique, renommable, code modifiable
   };
 }
  
@@ -385,6 +386,7 @@ async function fetchFromSheet(){
         if(!APP.instructionSheets) APP.instructionSheets = {};
         if(!APP.anomalies) APP.anomalies = [];
         if(!APP.chefAccounts) APP.chefAccounts = [];
+        if(!APP.adminAccount) APP.adminAccount = { name:'Administrateur', code:'1234' };
         rolloverWeekIfNeeded();
         lastKnownJSON = newJSON;
         initialSyncDone = true;
@@ -1008,7 +1010,7 @@ function resolveAnomaly(id){
     const rec=APP.anomalies.find(x=>x.id===id);
     if(rec){
       rec.status='resolved';
-      rec.resolvedBy='Administrateur';
+      rec.resolvedBy=APP.adminAccount.name;
       rec.resolvedDate=today();
       rec.resolvedTime=nowTime();
     }
@@ -1069,7 +1071,7 @@ function renderAnomaliesCard(canResolve, sectorFilter){
 // ════════════════════════════════════════════
 // VUE ADMIN
 // ════════════════════════════════════════════
-let adminState={locked:true,pass:'',role:null,chefAccountId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false,addingChef:false,newChefName:'',newChefCode:'',newChefSectors:[],openChefSectorPanels:{},activeTab:'suivi'};
+let adminState={locked:true,pass:'',role:null,chefAccountId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false,addingChef:false,newChefName:'',newChefCode:'',newChefSectors:[],openChefSectorPanels:{},activeTab:'suivi',editingChefId:null,editChefName:'',editChefCode:'',editingAdmin:false,editAdminName:'',editAdminCode:''};
 function chefSectorsPanelOpen(accId){ return !!adminState.openChefSectorPanels[accId]; }
 function toggleChefSectorsPanel(accId){
   adminState.openChefSectorPanels[accId] = !adminState.openChefSectorPanels[accId];
@@ -1079,7 +1081,7 @@ const ADMIN_TABS=[
   {id:'suivi',label:'Suivi'},
   {id:'anomalies',label:'Anomalies'},
   {id:'codes',label:'Codes-barres'},
-  {id:'chefs',label:"Chefs d'atelier"},
+  {id:'chefs',label:"Comptes"},
   {id:'machines',label:'Machines'},
   {id:'controles',label:'Contrôles'},
   {id:'archives',label:'Archives'},
@@ -1093,11 +1095,40 @@ function renderAdminTabs(){
     ${ADMIN_TABS.map(t=>`<button class="admin-tab ${adminState.activeTab===t.id?'active':''}" onclick="setAdminTab('${t.id}')">${t.label}</button>`).join('')}
   </div>`;
 }
-const ADMIN_CODE='1234';
  
 function getCurrentChefAccount(){
   if(adminState.role!=='chef') return null;
   return (APP.chefAccounts||[]).find(a=>a.id===adminState.chefAccountId) || null;
+}
+ 
+// ════════════════════════════════════════════
+// UNICITÉ — normalisation pour comparaisons insensibles à la casse/espaces
+// ════════════════════════════════════════════
+function normText(s){ return (s||'').toString().trim().toLowerCase(); }
+ 
+function isCodeTaken(code, excludeChefId){
+  const c=(code||'').toString().trim();
+  if(!c) return false;
+  if(c===APP.adminAccount.code) return true;
+  return (APP.chefAccounts||[]).some(a=>a.id!==excludeChefId && a.code===c);
+}
+function isChefNameTaken(name, excludeChefId){
+  const n=normText(name);
+  if(!n) return false;
+  if(normText(APP.adminAccount.name)===n) return true;
+  return (APP.chefAccounts||[]).some(a=>a.id!==excludeChefId && normText(a.name)===n);
+}
+function isMachineNameTaken(name, excludeId){
+  const n=normText(name);
+  return APP.machines.some(m=>m.id!==excludeId && normText(m.name)===n);
+}
+function isCategoryNameTaken(name, excludeName){
+  const n=normText(name);
+  return Object.keys(APP.questions).some(c=>c!==excludeName && normText(c)===n);
+}
+function isOperatorNameTaken(cat, name, excludeIdx){
+  const n=normText(name);
+  return (APP.operators[cat]||[]).some((o,i)=>i!==excludeIdx && normText(o)===n);
 }
  
 // ════════════════════════════════════════════
@@ -1122,7 +1153,7 @@ function renderValidationBanner(role, sectorFilter){
   if(!isUrgentPeriod()) return '';
   const pending = machinesDoneNotValidated(role, sectorFilter);
   if(pending.length===0) return '';
-  const roleLabel = role==='admin' ? 'Administrateur' : "Chef d'atelier";
+  const roleLabel = role==='admin' ? APP.adminAccount.name : "Chef d'atelier";
   return `<div class="warn-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span><strong>À valider !</strong> ${pending.length} fiche${pending.length>1?'s':''} contrôlée${pending.length>1?'s':''} mais pas encore validée${pending.length>1?'s':''} par ${roleLabel} avant le reset de dimanche soir : ${pending.map(m=>m.name).join(' · ')}</span>
@@ -1131,7 +1162,7 @@ function renderValidationBanner(role, sectorFilter){
 function toggleValidation(machineId, role){
   const record = APP.weekRecords[machineId];
   if(!record) return;
-  const label = role==='admin' ? 'Administrateur' : "Chef d'atelier";
+  const label = role==='admin' ? APP.adminAccount.name : "Chef d'atelier";
   if(isValidated(record, role)){
     if(!confirm(`Annuler la validation (${label}) pour ${record.machineName||machineId} ?`)) return;
     syncedWrite(()=>{
@@ -1292,6 +1323,27 @@ function renderAdmin(){
   }
   else if(tab==='chefs'){
     tabHtml=`
+    <div class="card" style="border-color:rgba(245,197,24,.35)">
+      <div class="card-title">Compte Administrateur</div>
+      ${adminState.editingAdmin?`
+      <label class="lbl" style="margin-top:0">Nom affiché</label>
+      <input type="text" id="edit-admin-name" value="${adminState.editAdminName}" oninput="adminState.editAdminName=this.value">
+      <label class="lbl">Code secret</label>
+      <input type="text" id="edit-admin-code" value="${adminState.editAdminCode}" oninput="adminState.editAdminCode=this.value">
+      <div style="display:flex;gap:7px;margin-top:10px">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveAdminAccount()">Enregistrer</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cancelEditAdmin()">Annuler</button>
+      </div>`:`
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;font-size:17px;color:#fff">${APP.adminAccount.name}</div>
+          <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">Code : ${APP.adminAccount.code}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="startEditAdmin()">Modifier</button>
+      </div>`}
+      <div class="hint" style="margin-top:12px">Le code Administrateur donne accès à la vue complète (toutes les machines, toutes les anomalies, tous les secteurs).</div>
+    </div>
+ 
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="card-title" style="margin-bottom:0">Comptes Chef d'atelier (${(APP.chefAccounts||[]).length})</div>
@@ -1314,12 +1366,24 @@ function renderAdmin(){
       <div style="display:flex;flex-direction:column;gap:12px">
         ${APP.chefAccounts.map(acc=>`
         <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
+          ${adminState.editingChefId===acc.id?`
+          <label class="lbl" style="margin-top:0">Nom du chef</label>
+          <input type="text" id="edit-chef-name-${acc.id}" value="${adminState.editChefName}" oninput="adminState.editChefName=this.value">
+          <label class="lbl">Code secret personnel</label>
+          <input type="text" id="edit-chef-code-${acc.id}" value="${adminState.editChefCode}" oninput="adminState.editChefCode=this.value">
+          <div style="display:flex;gap:7px;margin-top:10px">
+            <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveChefAccount('${acc.id}')">Enregistrer</button>
+            <button class="btn btn-secondary btn-sm" style="flex:1" onclick="cancelEditChef()">Annuler</button>
+          </div>`:`
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
             <div style="min-width:0">
               <div style="font-weight:700;font-size:17px;color:#fff">${acc.name}</div>
               <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">Code : ${acc.code}</div>
             </div>
-            <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteChefAccount('${acc.id}')">Supprimer</button>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="btn btn-secondary btn-sm" onclick="startEditChef('${acc.id}')">Modifier</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteChefAccount('${acc.id}')">Supprimer</button>
+            </div>
           </div>
           <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Secteurs attribués</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
@@ -1336,7 +1400,7 @@ function renderAdmin(){
                 <label for="chef-${acc.id}-${cat}" style="font-size:14px">${cat}</label>
               </div>`).join('')}
             </div>
-          </div>`:''}
+          </div>`:''}`}
         </div>`).join('')}
       </div>`}
       <div class="hint" style="margin-top:12px">Chaque Chef d'atelier se connecte avec son propre code depuis l'onglet Admin, et ne voit que les machines des secteurs attribués ci-dessus.</div>
@@ -1467,7 +1531,7 @@ function renderAdmin(){
  
   c.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-    <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— Administrateur</span></div>
+    <div class="section-title">Administration <span style="font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0;font-weight:400">— ${APP.adminAccount.name}</span></div>
     <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
   </div>
   <div class="section-sub">Gestion des machines, codes-barres et suivi hebdomadaire — semaine du ${weekLabel(APP.weekKey)}</div>
@@ -1533,8 +1597,8 @@ function toggleWeekGroup(wk){
  
 function tryAdmin(){
   const input=document.getElementById('admin-pass');
-  const val=input?input.value:adminState.pass;
-  if(val===ADMIN_CODE){
+  const val=(input?input.value:adminState.pass||'').trim();
+  if(val===APP.adminAccount.code){
     adminState.locked=false;adminState.role='admin';adminState.chefAccountId=null;renderAdmin();
     return;
   }
@@ -1549,22 +1613,24 @@ function lockAdmin(){adminState.locked=true;adminState.role=null;adminState.chef
 function toggleAddMachine(){adminState.addingMachine=!adminState.addingMachine;renderAdmin();}
 function toggleArchive(){adminState.showArchive=!adminState.showArchive;renderAdmin();}
 function addMachine(){
-  const name=document.getElementById('new-mname')?.value||adminState.newName;
-  if(!name.trim()){alert('Entrez un nom');return;}
+  const name=(document.getElementById('new-mname')?.value||adminState.newName||'').trim();
+  if(!name){alert('Entrez un nom');return;}
   const cats=Object.keys(APP.questions);
   if(cats.length===0){alert('Créez d\'abord une famille de machines.');return;}
+  if(isMachineNameTaken(name)){ alert('Une machine porte déjà ce nom. Choisissez un nom différent.'); return; }
   const cat=cats.includes(adminState.newCat)?adminState.newCat:cats[0];
   adminState.newName='';adminState.addingMachine=false;
   renderAdmin();
   let id;
   syncedWrite(()=>{
+    if(isMachineNameTaken(name)) return; // re-vérifie après resync, silencieux (rare course)
     const prefix=cat.substring(0,2).toUpperCase();
     const count=APP.machines.filter(m=>m.cat===cat).length+1;
     id=`${prefix}-${String(count).padStart(2,'0')}`;
-    APP.machines.push({id,name:name.trim(),cat});
+    APP.machines.push({id,name,cat});
   }).then(()=>{
     renderAdmin();
-    showBC(id);
+    if(id) showBC(id);
   });
 }
 function addQuestion(cat){
@@ -1581,7 +1647,13 @@ function removeQ(cat,i){
 function addOperator(cat){
   const name=prompt(`Prénom du nouvel opérateur pour "${cat}" :`);
   if(name&&name.trim()){
-    syncedWrite(()=>{ if(!APP.operators[cat]) APP.operators[cat]=[]; APP.operators[cat].push(name.trim()); }).then(renderAdmin);
+    const clean=name.trim();
+    if(isOperatorNameTaken(cat, clean)){ alert('Un opérateur porte déjà ce nom dans cette catégorie.'); return; }
+    syncedWrite(()=>{
+      if(!APP.operators[cat]) APP.operators[cat]=[];
+      if(isOperatorNameTaken(cat, clean)) return;
+      APP.operators[cat].push(clean);
+    }).then(renderAdmin);
   }
 }
 function removeOperator(cat,i){
@@ -1591,7 +1663,36 @@ function removeOperator(cat,i){
 }
  
 // ════════════════════════════════════════════
-// COMPTES CHEF D'ATELIER — création, secteurs, suppression
+// COMPTE ADMINISTRATEUR — renommer / changer le code
+// ════════════════════════════════════════════
+function startEditAdmin(){
+  adminState.editingAdmin=true;
+  adminState.editAdminName=APP.adminAccount.name;
+  adminState.editAdminCode=APP.adminAccount.code;
+  renderAdmin();
+}
+function cancelEditAdmin(){
+  adminState.editingAdmin=false;
+  renderAdmin();
+}
+function saveAdminAccount(){
+  const name=(document.getElementById('edit-admin-name')?.value||adminState.editAdminName||'').trim();
+  const code=(document.getElementById('edit-admin-code')?.value||adminState.editAdminCode||'').trim();
+  if(!name){alert('Entrez un nom.');return;}
+  if(!code){alert('Entrez un code secret.');return;}
+  if(isChefNameTaken(name)){alert('Ce nom est déjà utilisé par un compte Chef d\'atelier. Choisissez-en un autre.');return;}
+  if(isCodeTaken(code)){alert('Ce code est déjà utilisé par un compte Chef d\'atelier. Choisissez-en un autre.');return;}
+  syncedWrite(()=>{
+    if(isChefNameTaken(name) || isCodeTaken(code)) return; // re-vérifie après resync
+    APP.adminAccount={ name, code };
+  }).then(()=>{
+    adminState.editingAdmin=false;
+    renderAdmin();
+  });
+}
+ 
+// ════════════════════════════════════════════
+// COMPTES CHEF D'ATELIER — création, secteurs, suppression, modification
 // ════════════════════════════════════════════
 function toggleAddChef(){
   adminState.addingChef=!adminState.addingChef;
@@ -1603,22 +1704,50 @@ function toggleNewChefSector(cat, checked){
   else { adminState.newChefSectors=adminState.newChefSectors.filter(c=>c!==cat); }
 }
 function addChefAccount(){
-  const name=document.getElementById('new-chef-name')?.value||adminState.newChefName;
-  const code=document.getElementById('new-chef-code')?.value||adminState.newChefCode;
-  if(!name.trim()){alert('Entrez un nom pour ce chef.');return;}
-  if(!code.trim()){alert('Entrez un code secret.');return;}
-  if(code.trim()===ADMIN_CODE){alert('Ce code est réservé à l\'Administrateur, choisissez-en un autre.');return;}
-  const codeExists=(APP.chefAccounts||[]).some(a=>a.code===code.trim());
-  if(codeExists){alert('Ce code est déjà utilisé par un autre compte Chef.');return;}
+  const name=(document.getElementById('new-chef-name')?.value||adminState.newChefName||'').trim();
+  const code=(document.getElementById('new-chef-code')?.value||adminState.newChefCode||'').trim();
+  if(!name){alert('Entrez un nom pour ce chef.');return;}
+  if(!code){alert('Entrez un code secret.');return;}
+  if(isChefNameTaken(name)){alert('Ce nom est déjà utilisé (Administrateur ou autre chef). Choisissez-en un autre.');return;}
+  if(isCodeTaken(code)){alert('Ce code est déjà utilisé (Administrateur ou autre chef). Choisissez-en un autre.');return;}
   const sectors=[...adminState.newChefSectors];
   syncedWrite(()=>{
+    if(isChefNameTaken(name) || isCodeTaken(code)) return; // re-vérifie après resync
     if(!APP.chefAccounts) APP.chefAccounts=[];
     APP.chefAccounts.push({
       id:'CHEF-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
-      name:name.trim(), code:code.trim(), sectors
+      name, code, sectors
     });
   }).then(()=>{
     adminState.addingChef=false;adminState.newChefName='';adminState.newChefCode='';adminState.newChefSectors=[];
+    renderAdmin();
+  });
+}
+function startEditChef(accountId){
+  const acc=(APP.chefAccounts||[]).find(a=>a.id===accountId);
+  if(!acc) return;
+  adminState.editingChefId=accountId;
+  adminState.editChefName=acc.name;
+  adminState.editChefCode=acc.code;
+  renderAdmin();
+}
+function cancelEditChef(){
+  adminState.editingChefId=null;
+  renderAdmin();
+}
+function saveChefAccount(accountId){
+  const name=(document.getElementById('edit-chef-name-'+accountId)?.value||adminState.editChefName||'').trim();
+  const code=(document.getElementById('edit-chef-code-'+accountId)?.value||adminState.editChefCode||'').trim();
+  if(!name){alert('Entrez un nom.');return;}
+  if(!code){alert('Entrez un code secret.');return;}
+  if(isChefNameTaken(name, accountId)){alert('Ce nom est déjà utilisé par un autre compte. Choisissez-en un autre.');return;}
+  if(isCodeTaken(code, accountId)){alert('Ce code est déjà utilisé par un autre compte. Choisissez-en un autre.');return;}
+  syncedWrite(()=>{
+    if(isChefNameTaken(name, accountId) || isCodeTaken(code, accountId)) return; // re-vérifie après resync
+    const acc=(APP.chefAccounts||[]).find(a=>a.id===accountId);
+    if(acc){ acc.name=name; acc.code=code; }
+  }).then(()=>{
+    adminState.editingChefId=null;
     renderAdmin();
   });
 }
@@ -1666,8 +1795,9 @@ function addCategory(){
   const name=prompt('Nom de la nouvelle famille de machines (ex: Perçage) :');
   if(!name||!name.trim()) return;
   const clean=name.trim();
-  if(APP.questions[clean]||APP.operators[clean]){ alert('Cette famille existe déjà.'); return; }
+  if(isCategoryNameTaken(clean)){ alert('Cette famille existe déjà.'); return; }
   syncedWrite(()=>{
+    if(isCategoryNameTaken(clean)) return;
     APP.questions[clean]=[];
     APP.operators[clean]=[];
   }).then(renderAdmin);
@@ -1677,8 +1807,9 @@ function renameCategory(oldCat){
   if(!name||!name.trim()) return;
   const clean=name.trim();
   if(clean===oldCat) return;
-  if(APP.questions[clean]||APP.operators[clean]){ alert('Une famille porte déjà ce nom.'); return; }
+  if(isCategoryNameTaken(clean, oldCat)){ alert('Une famille porte déjà ce nom.'); return; }
   syncedWrite(()=>{
+    if(isCategoryNameTaken(clean, oldCat)) return;
     APP.questions[clean]=APP.questions[oldCat]||[];
     APP.operators[clean]=APP.operators[oldCat]||[];
     delete APP.questions[oldCat];
