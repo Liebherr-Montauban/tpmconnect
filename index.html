@@ -33,7 +33,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
  
 .hazard{height:7px;background:var(--stripe);background-size:34px 34px}
  
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:74px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-fixed{position:fixed;top:0;left:0;right:0;z-index:100}
+.header-spacer{height:81px}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:74px;display:flex;align-items:center;justify-content:space-between}
 .logo{color:#fff;font-family:var(--font-head);font-size:26px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
 .logo-dot{width:18px;height:18px;border-radius:4px;background:var(--stripe);background-size:10px 10px;flex-shrink:0}
 .logo span{color:var(--yellow)}
@@ -175,6 +177,12 @@ option{background:var(--bg3)}
 .week-group-head:hover{background:var(--bg4)}
 .week-group-title{font-family:var(--font-head);font-size:17px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.3px}
 .week-group-body{padding:0 4px}
+.admin-tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;-webkit-overflow-scrolling:touch}
+.admin-tabs::-webkit-scrollbar{height:5px}
+.admin-tabs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.admin-tab{flex-shrink:0;background:var(--bg3);color:var(--gray);border:1px solid var(--border2);padding:11px 18px;border-radius:11px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.admin-tab:hover{border-color:var(--gray)}
+.admin-tab.active{background:var(--yellow);color:#000;border-color:var(--yellow)}
 .chk-row{display:flex;align-items:center;gap:9px;padding:8px 0}
 .chk-row input{width:18px;height:18px;flex-shrink:0;accent-color:var(--yellow)}
 .chk-row label{font-size:15px;color:var(--text);cursor:pointer}
@@ -184,30 +192,33 @@ option{background:var(--bg3)}
 </head>
 <body>
  
-<div class="topbar">
-  <div class="logo"><div class="logo-dot"></div>TPM<span>Connect</span></div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="sync-indicator" id="sync-status">
-      <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-label">Connexion...</span>
-    </div>
-    <div class="topbar-tabs">
-      <button class="topbar-tab active" onclick="nav('operator')" id="tab-operator">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7M14 17h7M14 20h7"/></svg>
-        Opér.
-      </button>
-      <button class="topbar-tab" onclick="nav('dashboard')" id="tab-dashboard">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-        Tableau
-      </button>
-      <button class="topbar-tab" onclick="nav('admin')" id="tab-admin">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        Admin
-      </button>
+<div class="header-fixed">
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>TPM<span>Connect</span></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="sync-indicator" id="sync-status">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Connexion...</span>
+      </div>
+      <div class="topbar-tabs">
+        <button class="topbar-tab active" onclick="nav('operator')" id="tab-operator">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7M14 17h7M14 20h7"/></svg>
+          Opér.
+        </button>
+        <button class="topbar-tab" onclick="nav('dashboard')" id="tab-dashboard">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Tableau
+        </button>
+        <button class="topbar-tab" onclick="nav('admin')" id="tab-admin">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Admin
+        </button>
+      </div>
     </div>
   </div>
+  <div class="hazard"></div>
 </div>
-<div class="hazard"></div>
+<div class="header-spacer"></div>
  
 <div class="view active" id="view-operator"><div id="op-content"></div></div>
 <div class="view" id="view-dashboard"><div id="db-content"></div></div>
@@ -1058,11 +1069,29 @@ function renderAnomaliesCard(canResolve, sectorFilter){
 // ════════════════════════════════════════════
 // VUE ADMIN
 // ════════════════════════════════════════════
-let adminState={locked:true,pass:'',role:null,chefAccountId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false,addingChef:false,newChefName:'',newChefCode:'',newChefSectors:[],openChefSectorPanels:{}};
+let adminState={locked:true,pass:'',role:null,chefAccountId:null,addingMachine:false,newName:'',newCat:'Presse',showArchive:false,expandedWeek:undefined,showAnomalyHistory:false,addingChef:false,newChefName:'',newChefCode:'',newChefSectors:[],openChefSectorPanels:{},activeTab:'suivi'};
 function chefSectorsPanelOpen(accId){ return !!adminState.openChefSectorPanels[accId]; }
 function toggleChefSectorsPanel(accId){
   adminState.openChefSectorPanels[accId] = !adminState.openChefSectorPanels[accId];
   renderAdmin();
+}
+const ADMIN_TABS=[
+  {id:'suivi',label:'Suivi'},
+  {id:'anomalies',label:'Anomalies'},
+  {id:'codes',label:'Codes-barres'},
+  {id:'chefs',label:"Chefs d'atelier"},
+  {id:'machines',label:'Machines'},
+  {id:'controles',label:'Contrôles'},
+  {id:'archives',label:'Archives'},
+];
+function setAdminTab(tab){
+  adminState.activeTab=tab;
+  renderAdmin();
+}
+function renderAdminTabs(){
+  return `<div class="admin-tabs">
+    ${ADMIN_TABS.map(t=>`<button class="admin-tab ${adminState.activeTab===t.id?'active':''}" onclick="setAdminTab('${t.id}')">${t.label}</button>`).join('')}
+  </div>`;
 }
 const ADMIN_CODE='1234';
  
@@ -1210,6 +1239,231 @@ function renderAdmin(){
   const cats=Object.keys(APP.questions);
   const urgent=isUrgentPeriod();
   const pending=APP.machines.filter(m=>!APP.weekRecords[m.id]);
+  const tab=adminState.activeTab||'suivi';
+ 
+  let tabHtml='';
+ 
+  if(tab==='suivi'){
+    tabHtml=`
+    ${pending.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
+      ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
+    </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
+ 
+    ${renderValidationBanner('admin', null)}
+ 
+    <div class="card">
+      <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
+      <table class="tbl">
+        <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Durée</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
+        <tbody>
+          ${APP.machines.map(m=>{
+            const r=APP.weekRecords[m.id];
+            let statusCell;
+            if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
+            else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
+            return `<tr>
+              <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
+              <td><span class="badge badge-yellow">${m.cat}</span></td>
+              <td>${statusCell}</td>
+              <td>${r?r.operator:'—'}</td>
+              <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono)">${r?fmtDuration(r.durationSec):'—'}</td>
+              <td>${r?`<button class="btn btn-sm ${isValidated(r,'admin')?'btn-secondary':'btn-primary'}" onclick="toggleValidation('${m.id}','admin')">${isValidated(r,'admin')?'✓ Validé':'Valider'}</button>`:'—'}</td>
+              <td>${r?validationBadge(r,'chef'):'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier concerné.</div>
+    </div>`;
+  }
+  else if(tab==='anomalies'){
+    tabHtml = renderAnomaliesCard(true, null);
+  }
+  else if(tab==='codes'){
+    tabHtml=`
+    <div class="card" style="border-color:rgba(245,197,24,.35)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="card-title" style="margin-bottom:0">Codes-barres — un par machine, à coller sur le poste</div>
+        <button class="btn btn-primary btn-sm" onclick="printAllBC()">Imprimer tous les codes-barres</button>
+      </div>
+      <div id="qr-thumb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px"></div>
+      <div class="hint" style="margin-top:12px">Touchez un code-barres pour l'agrandir et le télécharger individuellement. Un scan à la douchette sélectionne directement cette machine.</div>
+    </div>`;
+  }
+  else if(tab==='chefs'){
+    tabHtml=`
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0">Comptes Chef d'atelier (${(APP.chefAccounts||[]).length})</div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAddChef()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter un compte</button>
+      </div>
+      ${adminState.addingChef?`
+      <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
+        <label class="lbl" style="margin-top:0;color:var(--yellow)">Nom du chef</label>
+        <input type="text" placeholder="Ex: Jean Dupont" id="new-chef-name" value="${adminState.newChefName}" oninput="adminState.newChefName=this.value">
+        <label class="lbl" style="color:var(--yellow)">Code secret personnel</label>
+        <input type="text" placeholder="Ex: 5678" id="new-chef-code" value="${adminState.newChefCode}" oninput="adminState.newChefCode=this.value">
+        <label class="lbl" style="color:var(--yellow)">Secteurs autorisés</label>
+        ${cats.map(cat=>`<div class="chk-row">
+          <input type="checkbox" id="new-chef-cat-${cat}" ${adminState.newChefSectors.includes(cat)?'checked':''} onchange="toggleNewChefSector('${cat}',this.checked)">
+          <label for="new-chef-cat-${cat}">${cat}</label>
+        </div>`).join('')}
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addChefAccount()">Créer le compte</button>
+      </div>`:''}
+      ${(APP.chefAccounts||[]).length===0?`<p style="font-size:15px;color:var(--gray)">Aucun compte Chef d'atelier créé pour l'instant.</p>`:`
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${APP.chefAccounts.map(acc=>`
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+            <div style="min-width:0">
+              <div style="font-weight:700;font-size:17px;color:#fff">${acc.name}</div>
+              <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">Code : ${acc.code}</div>
+            </div>
+            <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteChefAccount('${acc.id}')">Supprimer</button>
+          </div>
+          <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Secteurs attribués</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            ${acc.sectors.length===0?`<span class="badge badge-gray">Aucun secteur</span>`:acc.sectors.map(s=>`<span class="badge badge-yellow">${s}</span>`).join('')}
+          </div>
+          ${acc.sectors.length===0?`<div class="hint" style="margin-bottom:10px">Ce chef ne voit rien pour l'instant, tant qu'aucun secteur ne lui est attribué.</div>`:''}
+          <button class="btn btn-secondary btn-sm" onclick="toggleChefSectorsPanel('${acc.id}')">${chefSectorsPanelOpen(acc.id)?'Fermer':'Afficher les familles'}</button>
+          ${chefSectorsPanelOpen(acc.id)?`
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Cocher les familles autorisées</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${cats.map(cat=>`<div class="chk-row" style="padding:4px 0">
+                <input type="checkbox" id="chef-${acc.id}-${cat}" ${acc.sectors.includes(cat)?'checked':''} onchange="toggleChefSector('${acc.id}','${cat}',this.checked)">
+                <label for="chef-${acc.id}-${cat}" style="font-size:14px">${cat}</label>
+              </div>`).join('')}
+            </div>
+          </div>`:''}
+        </div>`).join('')}
+      </div>`}
+      <div class="hint" style="margin-top:12px">Chaque Chef d'atelier se connecte avec son propre code depuis l'onglet Admin, et ne voit que les machines des secteurs attribués ci-dessus.</div>
+    </div>`;
+  }
+  else if(tab==='machines'){
+    tabHtml=`
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
+        <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${cats.map(cat=>{
+            const count=APP.machines.filter(m=>m.cat===cat).length;
+            return `<tr>
+              <td style="font-weight:600">${cat}</td>
+              <td>${count}</td>
+              <td style="color:var(--gray)">${(APP.questions[cat]||[]).length}</td>
+              <td style="color:var(--gray)">${(APP.operators[cat]||[]).length}</td>
+              <td style="display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm" onclick="renameCategory('${cat}')">Renommer</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat}')" ${count>0?'disabled title="Réassignez ou supprimez d\'abord les machines de cette famille"':''}>Supprimer</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
+    </div>
+ 
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0">Parc machine (${APP.machines.length})</div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAddMachine()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter</button>
+      </div>
+      ${adminState.addingMachine?`
+      <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px">
+          <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Nom</label>
+          <input type="text" placeholder="Ex: Presse 12" id="new-mname" value="${adminState.newName}" oninput="adminState.newName=this.value"></div>
+          <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Catégorie</label>
+          <select id="new-mcat" onchange="adminState.newCat=this.value">${cats.map(c2=>`<option ${adminState.newCat===c2?'selected':''}>${c2}</option>`).join('')}</select></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + Code-barres</button>
+      </div>`:''}
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${APP.machines.map(m=>{
+          const sheet=getInstructionSheet(m.id);
+          return `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
+              <div style="min-width:0">
+                <div style="font-weight:700;font-size:18px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
+                <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">${m.id}</div>
+              </div>
+              <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteMachine('${m.id}')">Supprimer</button>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+              <select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;flex:1;min-width:130px;padding:9px 12px;font-size:14px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select>
+              <button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Code-barres</button>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:12px">
+              <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Fiche d'instruction</div>
+              ${sheet?`
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span class="badge badge-green cell-clip" style="width:fit-content;max-width:100%">📄 ${sheet.fileName}</span>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn btn-secondary btn-sm" onclick="viewInstructionSheet('${m.id}')">Voir</button>
+                    <button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">Modifier</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteInstructionSheet('${m.id}')">Retirer</button>
+                  </div>
+                </div>
+              `:`<button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">+ Lier un PDF</button>`}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans le Sheet : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
+    </div>`;
+  }
+  else if(tab==='controles'){
+    tabHtml=`
+    <div class="card">
+      <div class="card-title">Questions de contrôle</div>
+      ${cats.map(cat=>`
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <span class="badge badge-yellow">${cat}</span>
+          <button class="btn btn-secondary btn-sm" onclick="addQuestion('${cat}')">+ Ajouter</button>
+        </div>
+        ${APP.questions[cat].map((q,i)=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
+          <span style="flex:1;padding-right:7px">${q}</span>
+          <button onclick="removeQ('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
+        </div>`).join('')}
+      </div>`).join('')}
+    </div>
+ 
+    <div class="card">
+      <div class="card-title">Opérateurs (prénoms)</div>
+      ${cats.map(cat=>`
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <span class="badge badge-yellow">${cat}</span>
+          <button class="btn btn-secondary btn-sm" onclick="addOperator('${cat}')">+ Ajouter</button>
+        </div>
+        ${(APP.operators[cat]||[]).map((o,i)=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
+          <span style="flex:1;padding-right:7px">${o}</span>
+          <button onclick="removeOperator('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
+        </div>`).join('')}
+        ${(APP.operators[cat]||[]).length===0?`<div style="font-size:12px;color:var(--gray2);padding:7px 0">Aucun opérateur pour cette catégorie</div>`:''}
+      </div>`).join('')}
+    </div>`;
+  }
+  else if(tab==='archives'){
+    tabHtml=`
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${adminState.showArchive?'14px':'0'}">
+        <div class="card-title" style="margin-bottom:0">Archives — historique par semaine (rien n'est supprimé)</div>
+        <button class="toggle-link" onclick="toggleArchive()">${adminState.showArchive?'Masquer':'Afficher'} (${APP.history.length})</button>
+      </div>
+      ${adminState.showArchive?renderArchiveByWeek():`<p style="font-size:15px;color:var(--gray)">${APP.history.length} fiche(s) archivée(s) depuis le début, classées automatiquement par semaine. Cliquez sur "Afficher" pour consulter l'historique complet — aucune donnée n'est jamais effacée.</p>`}
+    </div>`;
+  }
  
   c.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
@@ -1217,214 +1471,8 @@ function renderAdmin(){
     <button class="btn btn-danger btn-sm" onclick="lockAdmin()">Verrouiller</button>
   </div>
   <div class="section-sub">Gestion des machines, codes-barres et suivi hebdomadaire — semaine du ${weekLabel(APP.weekKey)}</div>
- 
-  <div class="card" style="border-color:rgba(245,197,24,.35)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="card-title" style="margin-bottom:0">Codes-barres — un par machine, à coller sur le poste</div>
-      <button class="btn btn-primary btn-sm" onclick="printAllBC()">Imprimer tous les codes-barres</button>
-    </div>
-    <div id="qr-thumb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px"></div>
-    <div class="hint" style="margin-top:12px">Touchez un code-barres pour l'agrandir et le télécharger individuellement. Un scan à la douchette sélectionne directement cette machine.</div>
-  </div>
- 
-  ${pending.length>0?`<div class="${urgent?'warn-banner':'info-banner'}">
-    ${urgent?'<strong>Relance nécessaire</strong> — ':''}${pending.length} machine${pending.length>1?'s':''} pas encore contrôlée${pending.length>1?'s':''} cette semaine : ${pending.map(m=>m.name).join(' · ')}
-  </div>`:`<div class="info-banner">Toutes les machines ont été contrôlées cette semaine</div>`}
- 
-  ${renderValidationBanner('admin', null)}
- 
-  ${renderAnomaliesCard(true, null)}
- 
-  <div class="card">
-    <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
-    <table class="tbl">
-      <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Durée</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
-      <tbody>
-        ${APP.machines.map(m=>{
-          const r=APP.weekRecords[m.id];
-          let statusCell;
-          if(r) statusCell = r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">Fait</span>`;
-          else statusCell = urgent?`<span class="badge badge-orange">En retard</span>`:`<span class="badge badge-gray">À faire</span>`;
-          return `<tr>
-            <td style="font-weight:600">${catIcon(m.cat)} ${m.name}</td>
-            <td><span class="badge badge-yellow">${m.cat}</span></td>
-            <td>${statusCell}</td>
-            <td>${r?r.operator:'—'}</td>
-            <td style="font-variant-numeric:tabular-nums;font-family:var(--font-mono)">${r?fmtDuration(r.durationSec):'—'}</td>
-            <td>${r?`<button class="btn btn-sm ${isValidated(r,'admin')?'btn-secondary':'btn-primary'}" onclick="toggleValidation('${m.id}','admin')">${isValidated(r,'admin')?'✓ Validé':'Valider'}</button>`:'—'}</td>
-            <td>${r?validationBadge(r,'chef'):'—'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier concerné.</div>
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">Comptes Chef d'atelier (${(APP.chefAccounts||[]).length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="toggleAddChef()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter un compte</button>
-    </div>
-    ${adminState.addingChef?`
-    <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
-      <label class="lbl" style="margin-top:0;color:var(--yellow)">Nom du chef</label>
-      <input type="text" placeholder="Ex: Jean Dupont" id="new-chef-name" value="${adminState.newChefName}" oninput="adminState.newChefName=this.value">
-      <label class="lbl" style="color:var(--yellow)">Code secret personnel</label>
-      <input type="text" placeholder="Ex: 5678" id="new-chef-code" value="${adminState.newChefCode}" oninput="adminState.newChefCode=this.value">
-      <label class="lbl" style="color:var(--yellow)">Secteurs autorisés</label>
-      ${cats.map(cat=>`<div class="chk-row">
-        <input type="checkbox" id="new-chef-cat-${cat}" ${adminState.newChefSectors.includes(cat)?'checked':''} onchange="toggleNewChefSector('${cat}',this.checked)">
-        <label for="new-chef-cat-${cat}">${cat}</label>
-      </div>`).join('')}
-      <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addChefAccount()">Créer le compte</button>
-    </div>`:''}
-    ${(APP.chefAccounts||[]).length===0?`<p style="font-size:15px;color:var(--gray)">Aucun compte Chef d'atelier créé pour l'instant.</p>`:`
-    <div style="display:flex;flex-direction:column;gap:12px">
-      ${APP.chefAccounts.map(acc=>`
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
-          <div style="min-width:0">
-            <div style="font-weight:700;font-size:17px;color:#fff">${acc.name}</div>
-            <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">Code : ${acc.code}</div>
-          </div>
-          <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteChefAccount('${acc.id}')">Supprimer</button>
-        </div>
-        <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Secteurs attribués</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-          ${acc.sectors.length===0?`<span class="badge badge-gray">Aucun secteur</span>`:acc.sectors.map(s=>`<span class="badge badge-yellow">${s}</span>`).join('')}
-        </div>
-        ${acc.sectors.length===0?`<div class="hint" style="margin-bottom:10px">Ce chef ne voit rien pour l'instant, tant qu'aucun secteur ne lui est attribué.</div>`:''}
-        <button class="btn btn-secondary btn-sm" onclick="toggleChefSectorsPanel('${acc.id}')">${chefSectorsPanelOpen(acc.id)?'Fermer':'Afficher les familles'}</button>
-        ${chefSectorsPanelOpen(acc.id)?`
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Cocher les familles autorisées</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${cats.map(cat=>`<div class="chk-row" style="padding:4px 0">
-              <input type="checkbox" id="chef-${acc.id}-${cat}" ${acc.sectors.includes(cat)?'checked':''} onchange="toggleChefSector('${acc.id}','${cat}',this.checked)">
-              <label for="chef-${acc.id}-${cat}" style="font-size:14px">${cat}</label>
-            </div>`).join('')}
-          </div>
-        </div>`:''}
-      </div>`).join('')}
-    </div>`}
-    <div class="hint" style="margin-top:12px">Chaque Chef d'atelier se connecte avec son propre code depuis l'onglet Admin, et ne voit que les machines des secteurs cochés ci-dessus.</div>
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${cats.map(cat=>{
-          const count=APP.machines.filter(m=>m.cat===cat).length;
-          return `<tr>
-            <td style="font-weight:600">${cat}</td>
-            <td>${count}</td>
-            <td style="color:var(--gray)">${(APP.questions[cat]||[]).length}</td>
-            <td style="color:var(--gray)">${(APP.operators[cat]||[]).length}</td>
-            <td style="display:flex;gap:6px">
-              <button class="btn btn-secondary btn-sm" onclick="renameCategory('${cat}')">Renommer</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat}')" ${count>0?'disabled title="Réassignez ou supprimez d\'abord les machines de cette famille"':''}>Supprimer</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-title" style="margin-bottom:0">Parc machine (${APP.machines.length})</div>
-      <button class="btn btn-secondary btn-sm" onclick="toggleAddMachine()" ${cats.length===0?'disabled title="Créez d\'abord une famille de machines"':''}>+ Ajouter</button>
-    </div>
-    ${adminState.addingMachine?`
-    <div style="background:var(--yellow-dim);border:1px solid rgba(245,197,24,.2);border-radius:9px;padding:13px;margin-bottom:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px">
-        <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Nom</label>
-        <input type="text" placeholder="Ex: Presse 12" id="new-mname" value="${adminState.newName}" oninput="adminState.newName=this.value"></div>
-        <div><label class="lbl" style="margin-top:0;color:var(--yellow)">Catégorie</label>
-        <select id="new-mcat" onchange="adminState.newCat=this.value">${cats.map(c2=>`<option ${adminState.newCat===c2?'selected':''}>${c2}</option>`).join('')}</select></div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="addMachine()">Créer + Code-barres</button>
-    </div>`:''}
-    <div style="display:flex;flex-direction:column;gap:12px">
-      ${APP.machines.map(m=>{
-        const sheet=getInstructionSheet(m.id);
-        return `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:15px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
-            <div style="min-width:0">
-              <div style="font-weight:700;font-size:18px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
-              <div style="font-size:13px;color:var(--gray);font-family:var(--font-mono);margin-top:2px">${m.id}</div>
-            </div>
-            <button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deleteMachine('${m.id}')">Supprimer</button>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-            <select onchange="changeMachineCat('${m.id}',this.value)" style="width:auto;flex:1;min-width:130px;padding:9px 12px;font-size:14px">${cats.map(c2=>`<option ${m.cat===c2?'selected':''}>${c2}</option>`).join('')}</select>
-            <button class="btn btn-secondary btn-sm" onclick="showBC('${m.id}')">Code-barres</button>
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:12px">
-            <div style="font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Fiche d'instruction</div>
-            ${sheet?`
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <span class="badge badge-green cell-clip" style="width:fit-content;max-width:100%">📄 ${sheet.fileName}</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-secondary btn-sm" onclick="viewInstructionSheet('${m.id}')">Voir</button>
-                  <button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">Modifier</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteInstructionSheet('${m.id}')">Retirer</button>
-                </div>
-              </div>
-            `:`<button class="btn btn-secondary btn-sm" onclick="setInstructionSheet('${m.id}')">+ Lier un PDF</button>`}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans le Sheet : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
-  </div>
- 
-  <div class="card">
-    <div class="card-title">Questions de contrôle</div>
-    ${cats.map(cat=>`
-    <div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span class="badge badge-yellow">${cat}</span>
-        <button class="btn btn-secondary btn-sm" onclick="addQuestion('${cat}')">+ Ajouter</button>
-      </div>
-      ${APP.questions[cat].map((q,i)=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
-        <span style="flex:1;padding-right:7px">${q}</span>
-        <button onclick="removeQ('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
-      </div>`).join('')}
-    </div>`).join('')}
-  </div>
- 
-  <div class="card">
-    <div class="card-title">Opérateurs (prénoms)</div>
-    ${cats.map(cat=>`
-    <div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <span class="badge badge-yellow">${cat}</span>
-        <button class="btn btn-secondary btn-sm" onclick="addOperator('${cat}')">+ Ajouter</button>
-      </div>
-      ${(APP.operators[cat]||[]).map((o,i)=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">
-        <span style="flex:1;padding-right:7px">${o}</span>
-        <button onclick="removeOperator('${cat}',${i})" style="background:none;border:none;color:var(--gray2);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:5px">×</button>
-      </div>`).join('')}
-      ${(APP.operators[cat]||[]).length===0?`<div style="font-size:12px;color:var(--gray2);padding:7px 0">Aucun opérateur pour cette catégorie</div>`:''}
-    </div>`).join('')}
-  </div>
- 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${adminState.showArchive?'14px':'0'}">
-      <div class="card-title" style="margin-bottom:0">Archives — historique par semaine (rien n'est supprimé)</div>
-      <button class="toggle-link" onclick="toggleArchive()">${adminState.showArchive?'Masquer':'Afficher'} (${APP.history.length})</button>
-    </div>
-    ${adminState.showArchive?renderArchiveByWeek():`<p style="font-size:15px;color:var(--gray)">${APP.history.length} fiche(s) archivée(s) depuis le début, classées automatiquement par semaine. Cliquez sur "Afficher" pour consulter l'historique complet — aucune donnée n'est jamais effacée.</p>`}
-  </div>`;
+  ${renderAdminTabs()}
+  ${tabHtml}`;
   renderBCThumbGrid();
 }
  
