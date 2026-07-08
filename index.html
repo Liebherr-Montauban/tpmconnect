@@ -187,6 +187,75 @@ option{background:var(--bg3)}
 .chk-row input{width:18px;height:18px;flex-shrink:0;accent-color:var(--yellow)}
 .chk-row label{font-size:15px;color:var(--text);cursor:pointer}
  
+/* Tables : conteneur qui défile horizontalement au lieu de casser la mise en page sur petit écran */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+.tbl-scroll .tbl{min-width:520px}
+ 
+/* ════════════════════════════════════════════
+   RESPONSIVE — écrans réduits (tablette / mobile)
+   ════════════════════════════════════════════ */
+@media (max-width:640px){
+  html,body{font-size:16px}
+  .header-spacer{height:104px}
+  .topbar{height:auto;min-height:64px;padding:8px 12px;flex-wrap:wrap;gap:6px;row-gap:8px}
+  .logo{font-size:19px;gap:7px}
+  .logo-dot{width:14px;height:14px}
+  .topbar > div{gap:6px!important}
+  .sync-indicator{font-size:11px;gap:5px}
+  .sync-dot{width:8px;height:8px}
+  .topbar-tabs{gap:1px;width:100%;justify-content:space-between;order:3}
+  .topbar-tab{padding:6px 8px;font-size:10.5px;flex:1;border-radius:8px}
+  .topbar-tab svg{width:20px;height:20px}
+
+  .view{padding:12px;padding-bottom:44px}
+  .card{padding:15px;border-radius:13px}
+  .card-title{font-size:13px}
+
+  .section-title{font-size:21px}
+  .section-sub{font-size:14px;margin-bottom:13px}
+
+  select,input[type=text],input[type=password]{padding:12px 14px;font-size:16px;border-radius:10px}
+  .btn{padding:14px 18px;font-size:15px}
+  .btn-sm{padding:9px 14px;font-size:13px}
+
+  .machine-header{padding:15px}
+  .machine-header h2{font-size:22px}
+  .machine-header p{font-size:14px}
+  .machine-header > div[style*="flex-shrink:0"]{padding:8px 12px!important}
+  #chrono-display{font-size:22px!important}
+
+  .check-row{padding:12px 0;flex-wrap:wrap;gap:8px}
+  .check-q{font-size:15px;flex:1 1 100%;padding-right:0}
+  .radio-pair{flex:1 1 100%;justify-content:flex-end}
+  .radio-btn{padding:9px 14px;font-size:14px}
+
+  .stats-row{gap:8px}
+  .stat-card{padding:11px 6px;border-radius:11px}
+  .stat-num{font-size:24px}
+  .stat-lbl{font-size:10.5px}
+
+  .machine-grid{grid-template-columns:1fr;gap:9px}
+  .machine-tile{padding:13px}
+
+  .tbl{font-size:14px}
+  .tbl th{padding:8px 9px;font-size:11px}
+  .tbl td{padding:10px 9px}
+
+  .modal-box{padding:20px;border-radius:16px}
+  .lock-box{max-width:100%}
+
+  .admin-tab{padding:9px 13px;font-size:12.5px}
+
+  /* Boutons/menus déroulants qui empilaient plusieurs éléments sur une ligne passent en colonne */
+  div[style*="display:flex"][style*="justify-content:space-between"]{flex-wrap:wrap}
+}
+
+@media (max-width:400px){
+  .topbar-tab{font-size:9.5px;padding:6px 4px}
+  .stats-row{grid-template-columns:1fr;gap:8px}
+  .stat-card{text-align:left;display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
+  .stat-num{font-size:22px}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
@@ -965,7 +1034,7 @@ function renderDashboard(){
  
   ${done>0?`<div class="card">
     <div class="card-title">Récapitulatif de la semaine</div>
-    <table class="tbl">
+    <div class="tbl-scroll"><table class="tbl">
       <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th></tr></thead>
       <tbody>
         ${machines.filter(m=>records[m.id]).map(m=>{
@@ -977,7 +1046,7 @@ function renderDashboard(){
           <td>${r.anomaly?`<span class="badge badge-red">Anomalie</span>`:`<span class="badge badge-green">OK</span>`}</td></tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table></div>
   </div>`:`<div style="text-align:center;padding:28px 20px;color:var(--gray);font-size:13px">
     Aucune TPM validée pour l'instant cette semaine.
   </div>`}`;
@@ -1036,7 +1105,7 @@ function renderAnomaliesCard(canResolve, sectorFilter){
   return `<div class="card">
     <div class="card-title">Anomalies signalées ${open.length>0?`<span class="badge badge-red" style="margin-left:6px">${open.length} en cours</span>`:''}</div>
     ${open.length===0?`<p style="font-size:15px;color:var(--gray)">Aucune anomalie en cours 👍</p>`:`
-    <table class="tbl">
+    <div class="tbl-scroll"><table class="tbl">
       <thead><tr><th>Machine</th><th>Signalée le</th><th>Par</th><th>Statut</th><th>Action</th></tr></thead>
       <tbody>
         ${open.map(a=>`<tr>
@@ -1047,13 +1116,13 @@ function renderAnomaliesCard(canResolve, sectorFilter){
           <td>${canResolve?`<button class="btn btn-primary btn-sm" onclick="resolveAnomaly('${a.id}')">Marquer résolue</button>`:'<span style="color:var(--gray);font-size:14px">Réservé à l\'administrateur</span>'}</td>
         </tr>`).join('')}
       </tbody>
-    </table>`}
+    </table></div>`}
     ${resolved.length>0?`
     <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
       <button class="toggle-link" onclick="toggleAnomalyHistory()">${adminState.showAnomalyHistory?'Masquer':'Afficher'} l'historique des anomalies résolues (${resolved.length})</button>
     </div>
     ${adminState.showAnomalyHistory?`
-    <table class="tbl" style="margin-top:12px">
+    <div class="tbl-scroll"><table class="tbl" style="margin-top:12px">
       <thead><tr><th>Machine</th><th>Signalée le</th><th>Par</th><th>Statut</th><th>Action</th></tr></thead>
       <tbody>
         ${resolved.map(a=>`<tr>
@@ -1064,7 +1133,7 @@ function renderAnomaliesCard(canResolve, sectorFilter){
           <td style="color:var(--gray);font-size:14px">${a.resolvedBy} · ${a.resolvedDate} ${a.resolvedTime}${canResolve?` &nbsp;<button class="toggle-link" style="font-size:13px" onclick="reopenAnomaly('${a.id}')">Réouvrir</button>`:''}</td>
         </tr>`).join('')}
       </tbody>
-    </table>`:''}`:''}
+    </table></div>`:''}`:''}
   </div>`;
 }
  
@@ -1226,7 +1295,7 @@ function renderChefView(c){
  
   <div class="card">
     <div class="card-title">Suivi hebdomadaire — qui a fait / qui a validé</div>
-    <table class="tbl">
+    <div class="tbl-scroll"><table class="tbl">
       <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
       <tbody>
         ${sectorMachines.map(m=>{
@@ -1244,7 +1313,7 @@ function renderChefView(c){
           </tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table></div>
     <div class="hint">Vous validez en tant que Chef d'atelier pour vos secteurs. La colonne "Validation Admin" reflète en temps réel la validation de l'administrateur.</div>
   </div>`;
 }
@@ -1284,7 +1353,7 @@ function renderAdmin(){
  
     <div class="card">
       <div class="card-title">Suivi hebdomadaire — qui a fait / qui n'a pas fait / qui a validé</div>
-      <table class="tbl">
+      <div class="tbl-scroll"><table class="tbl">
         <thead><tr><th>Machine</th><th>Catégorie</th><th>Statut TPM</th><th>Opérateur</th><th>Durée</th><th>Validation Admin</th><th>Validation Chef</th></tr></thead>
         <tbody>
           ${APP.machines.map(m=>{
@@ -1303,7 +1372,7 @@ function renderAdmin(){
             </tr>`;
           }).join('')}
         </tbody>
-      </table>
+      </table></div>
       <div class="hint">Vous validez en tant qu'Administrateur. La colonne "Validation Chef" reflète en temps réel la validation du chef d'atelier concerné.</div>
     </div>`;
   }
@@ -1413,7 +1482,7 @@ function renderAdmin(){
         <div class="card-title" style="margin-bottom:0">Familles de machines (${cats.length})</div>
         <button class="btn btn-secondary btn-sm" onclick="addCategory()">+ Ajouter une famille</button>
       </div>
-      <table class="tbl">
+      <div class="tbl-scroll"><table class="tbl">
         <thead><tr><th>Famille</th><th>Machines</th><th>Questions</th><th>Opérateurs</th><th>Actions</th></tr></thead>
         <tbody>
           ${cats.map(cat=>{
@@ -1430,7 +1499,7 @@ function renderAdmin(){
             </tr>`;
           }).join('')}
         </tbody>
-      </table>
+      </table></div>
       <div class="hint" style="margin-top:12px">Une famille ne peut être supprimée que si aucune machine ne lui est encore rattachée.</div>
     </div>
  
@@ -1571,7 +1640,7 @@ function renderArchiveByWeek(){
         <span style="font-size:20px;color:var(--gray);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .15s">▾</span>
       </div>
       ${isOpen?`<div class="week-group-body">
-        <table class="tbl">
+        <div class="tbl-scroll"><table class="tbl">
           <thead><tr><th>Machine</th><th>Opérateur</th><th>Date</th><th>Heure</th><th>Durée</th><th>Statut</th><th>Val. Admin</th><th>Val. Chef</th></tr></thead>
           <tbody>
             ${records.map(r=>`<tr>
@@ -1585,7 +1654,7 @@ function renderArchiveByWeek(){
               <td>${validationBadge(r,'chef')}</td>
             </tr>`).join('')}
           </tbody>
-        </table>
+        </table></div>
       </div>`:''}
     </div>`;
   }).join('');
