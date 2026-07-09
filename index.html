@@ -332,9 +332,10 @@ option{background:var(--bg3)}
  
 <script>
 // ════════════════════════════════════════════
-// CONFIG — URL de ton Google Apps Script déployé (NE PAS CHANGER)
+// CONFIG — URL de ta base Firebase Realtime Database (NE PAS CHANGER)
+// On stocke tout dans un seul noeud "tpmdata.json" à la racine de la base.
 // ════════════════════════════════════════════
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxt5aNaPUN80LsmSKBBX6mcrj1ABVFYE7A0-IUSPZTdNOAluNwRRj5pBWZscIUBwySrig/exec';
+const SHEET_API_URL = 'https://tpmconnect-default-rtdb.firebaseio.com/tpmdata.json';
 const POLL_INTERVAL = 4000; // 4s — fréquence de vérification des mises à jour
 // URL du dossier où sont déposés les PDF de fiches d'instruction.
 // Fixée en dur vers l'adresse complète du dépôt GitHub Pages, pour que les liens
@@ -431,14 +432,14 @@ function rolloverWeekIfNeeded(){
 }
  
 // ════════════════════════════════════════════
-// SYNC ENGINE — Google Sheets via Apps Script
+// SYNC ENGINE — Firebase Realtime Database (REST : GET / PUT en JSON brut)
 // ════════════════════════════════════════════
 function setSyncState(state){
   const dot=document.getElementById('sync-dot');
   const lbl=document.getElementById('sync-label');
   if(!dot) return;
   dot.className='sync-dot';
-  if(state==='live'){ dot.classList.add('live'); lbl.textContent='Sheet connecté'; isOnline=true; }
+  if(state==='live'){ dot.classList.add('live'); lbl.textContent='Base connectée'; isOnline=true; }
   else if(state==='syncing'){ dot.classList.add('syncing'); lbl.textContent='Synchro...'; }
   else if(state==='error'){ dot.classList.add('error'); lbl.textContent='Hors-ligne'; isOnline=false; }
   else { lbl.textContent='Connexion...'; }
@@ -475,7 +476,7 @@ async function fetchFromSheet(){
       setSyncState('live');
       return true;
     } else {
-      // Sheet vide -> on initialise avec les données par défaut
+      // Base vide -> on initialise avec les données par défaut
       lastKnownJSON = JSON.stringify(APP);
       initialSyncDone = true;
       await pushToSheet();
@@ -494,11 +495,12 @@ async function fetchFromSheet(){
 async function pushToSheet(){
   setSyncState('syncing');
   try{
-    await fetch(SHEET_API_URL, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
+    const res = await fetch(SHEET_API_URL, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify(APP)
     });
+    if(!res.ok) throw new Error('HTTP '+res.status);
     lastKnownJSON = JSON.stringify(APP);
     setSyncState('live');
   }catch(err){
@@ -510,7 +512,7 @@ function saveData(){
   pushToSheet();
 }
  
-// Récupère la toute dernière version du Sheet, applique le changement par-dessus,
+// Récupère la toute dernière version de la base, applique le changement par-dessus,
 // puis pousse le résultat. Réduit fortement le risque que deux appareils
 // s'écrasent mutuellement en écrivant en même temps.
 async function syncedWrite(mutator){
@@ -701,7 +703,7 @@ function getRecord(id){ return APP.weekRecords[id]||null; }
 // ════════════════════════════════════════════
 // FICHES D'INSTRUCTION — PDF par machine (référence par nom de fichier)
 // Le PDF est déposé manuellement dans le MÊME DOSSIER que cette page HTML.
-// Seul le nom du fichier est stocké dans le Sheet (texte court, aucun souci de taille).
+// Seul le nom du fichier est stocké dans la base (texte court, aucun souci de taille).
 // ════════════════════════════════════════════
 function getInstructionSheet(machineId){
   return (APP.instructionSheets && APP.instructionSheets[machineId]) || null;
@@ -732,7 +734,7 @@ function onInstructionFileSelected(inputEl){
   if(!machineId || !file) return;
   const isPdf = file.type==='application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   if(!isPdf){ alert('Choisis un fichier PDF.'); return; }
-  // On ne lit QUE le nom du fichier, jamais son contenu — rien n'est envoyé/stocké dans le Sheet à part ce texte.
+  // On ne lit QUE le nom du fichier, jamais son contenu — rien n'est envoyé/stocké dans la base à part ce texte.
   syncedWrite(()=>{
     if(!APP.instructionSheets) APP.instructionSheets={};
     APP.instructionSheets[machineId]={ fileName:file.name, addedAt: today()+' '+nowTime() };
@@ -806,7 +808,7 @@ function renderOperator(){
       <div style="font-size:13px;color:var(--gray);margin:5px 0 18px">${getMachineName(opState.machineId)} — ${nowTime()}</div>
       ${hasIssue?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><strong>Anomalie signalée</strong> — alerte envoyée à la maintenance</span></div>`:''}
       <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:13px;font-size:12px;color:#4ade80;margin-bottom:18px">
-        Fiche enregistrée sur Google Sheets — visible partout
+        Fiche enregistrée dans la base — visible partout
       </div>
       <button class="btn btn-secondary" onclick="resetOp()">Nouvelle saisie</button>
     </div>`;
@@ -842,7 +844,7 @@ function renderOperator(){
     <span><strong>Dépêchez-vous !</strong> ${pendingCount} machine${pendingCount>1?'s':''} restent à contrôler avant la fin de la semaine (reset dimanche soir).</span>
   </div>`:''}
  
-  ${!isOnline?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Connexion à Google Sheets indisponible — vérifie ta connexion</span></div>`:''}
+  ${!isOnline?`<div class="alert-banner"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Connexion à la base indisponible — vérifie ta connexion</span></div>`:''}
  
   ${existing?`<div class="info-banner">
     TPM déjà faite cette semaine par <strong>${existing.operator}</strong> le ${existing.date} à ${existing.time}
@@ -996,7 +998,7 @@ function renderDashboard(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
     <div class="section-title">Tableau de bord</div>
     <div style="display:flex;align-items:center;gap:8px">
-      ${isOnline?'<span class="live-badge">Sheets Live</span>':''}
+      ${isOnline?'<span class="live-badge">Base Live</span>':''}
       <span style="font-size:14px;color:var(--gray)">Màj ${now}</span>
     </div>
   </div>
@@ -1578,7 +1580,7 @@ function renderAdmin(){
           </div>`;
         }).join('')}
       </div>
-      <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans le Sheet : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
+      <div class="hint" style="margin-top:12px">Les fiches PDF ne sont pas stockées dans la base : dépose le fichier PDF dans le <strong>même dossier</strong> que cette page HTML, puis clique sur "Lier un PDF" et choisis-le dans l'explorateur — seul son nom est enregistré.</div>
     </div>`;
   }
   else if(tab==='controles'){
